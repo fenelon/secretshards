@@ -28,8 +28,13 @@
   const qrWarning      = document.getElementById('qr-warning');
   const overLimitMsg   = document.getElementById('over-limit-msg');
   const inputName      = document.getElementById('input-name');
+  const nameCount      = document.getElementById('name-count');
 
   const encoder = new TextEncoder();
+
+  inputName.addEventListener('input', function () {
+    nameCount.textContent = inputName.value.length;
+  });
 
   // ---------------------------------------------------------------------------
   // Validation
