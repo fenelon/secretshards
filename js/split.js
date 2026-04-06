@@ -208,7 +208,7 @@
   // ---------------------------------------------------------------------------
   function printPrefix() {
     const name = SSS.sanitizeName(inputName.value.trim());
-    return name ? 'secretshards-' + name + '-' : 'secretshards-';
+    return name ? 'SecretShards.com-' + name + '-' : 'SecretShards.com-';
   }
 
   function printSingleShare(index) {
