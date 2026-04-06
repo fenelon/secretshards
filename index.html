@@ -54,6 +54,12 @@
       </div>
 
       <div class="field-group">
+        <label class="label" for="input-name">Name <span class="label-optional">(optional)</span></label>
+        <input type="text" id="input-name" maxlength="20" pattern="[A-Za-z0-9_ ]*" placeholder="e.g. Wallet backup" aria-label="Optional share name">
+        <p class="hint">Printed on each share to help identify it later.</p>
+      </div>
+
+      <div class="field-group">
         <label class="label" for="input-secret">Secret</label>
         <textarea id="input-secret" rows="4" placeholder="Enter your secret..."></textarea>
         <div class="byte-counter">
@@ -92,11 +98,12 @@
         <div class="recovered-secret">
           <textarea id="recovered-text" readonly rows="4"></textarea>
           <button id="btn-copy-secret" class="btn-secondary">Copy</button>
-        <div id="aria-status" class="sr-only" aria-live="polite"></div>
         </div>
         <p class="hint">If this doesn't look right, check that you're using the correct shares.</p>
       </div>
     </section>
+
+    <div id="aria-status" class="sr-only" aria-live="polite"></div>
 
     <footer id="about">
       <section class="footer-description">
@@ -151,6 +158,9 @@
   <script src="js/qr-bundle.js"></script>
   <script src="js/qr.js"></script>
   <script src="js/scanner.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/split.js"></script>
+  <script src="js/combine.js"></script>
   <script src="js/app.js"></script>
   <script src="js/bundler.js"></script>
 </body>

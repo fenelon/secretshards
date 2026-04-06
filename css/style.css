@@ -15,6 +15,8 @@
   --color-border: #2a2a2a;
   --color-light-border: #222222;
   --color-dim: #666666;
+  --color-placeholder: #444444;
+  --color-warning: #b35900;
   --font-stack: 'Helvetica Neue', Helvetica, sans-serif;
   --max-width: 640px;
 }
@@ -187,6 +189,13 @@ h1 {
   margin-bottom: 10px;
 }
 
+.label-optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-dim);
+}
+
 /* ============================================================
    Threshold Row
    ============================================================ */
@@ -258,7 +267,7 @@ textarea:focus {
 }
 
 textarea::placeholder {
-  color: #444444;
+  color: var(--color-placeholder);
 }
 
 textarea[readonly] {
@@ -298,7 +307,7 @@ textarea[readonly]:focus {
 /* QR size warning under secret input */
 .qr-size-warning {
   font-size: 0.85rem;
-  color: #b35900;
+  color: var(--color-warning);
   margin-top: 0.375rem;
   font-style: italic;
 }
@@ -362,8 +371,8 @@ button {
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: #888888;
-  color: #ffffff;
+  border-color: var(--color-dim);
+  color: var(--color-text-heading);
 }
 
 .btn-secondary:disabled {
@@ -459,13 +468,23 @@ button {
   margin-bottom: 16px;
 }
 
+.share-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
 .share-qr {
   text-align: center;
   margin-bottom: 16px;
 }
 
-.share-qr canvas {
+.share-qr canvas,
+.share-qr img {
   display: inline-block;
+  image-rendering: pixelated;
+  border-radius: 8px;
 }
 
 .share-text {
@@ -879,24 +898,19 @@ footer {
     display: none;
   }
 
-  /* One share per page */
+  /* One share per page — plain block layout, no flex */
   .share-card {
     background: #fff;
     border: none;
     border-radius: 0;
-    padding: 0;
+    padding: 10% 0 0;
     margin: 0;
     page-break-after: always;
     break-after: page;
     page-break-inside: avoid;
     break-inside: avoid;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    box-sizing: border-box;
     text-align: center;
+    container-type: inline-size;
   }
 
   .share-card:last-child,
@@ -906,55 +920,75 @@ footer {
   }
 
   .share-label {
-    font-size: 14px;
+    font-size: 18pt;
+    font-size: 3.5cqi;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: #555;
-    margin-bottom: 8px;
+    margin-bottom: 8pt;
+    margin-bottom: 1cqi;
   }
 
   .share-label::after {
     content: 'This is a piece of a shared secret created by SecretShards.com.\A You can recover it there if you have enough pieces (shares).';
     white-space: pre-line;
     display: block;
-    font-size: 11px;
+    font-size: 11pt;
+    font-size: 2cqi;
     font-weight: 400;
     text-transform: none;
     letter-spacing: 0;
     color: #888;
-    max-width: 9cm;
     text-align: center;
     line-height: 1.4;
-    margin-top: 8px;
+    margin-top: 6pt;
+    margin-top: 0.8cqi;
   }
 
   .share-qr {
-    margin-bottom: 8px;
+    margin-bottom: 8pt;
+    margin-bottom: 1cqi;
   }
 
+  .share-qr img,
   .share-qr canvas {
-    width: 7cm;
-    height: 7cm;
+    display: block;
+    width: 80%;
+    height: auto;
+    margin: 0 auto;
     image-rendering: pixelated;
   }
 
   .share-text {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 12px;
+    font-size: 10pt;
+    font-size: 1.7cqi;
     color: #333;
     word-break: break-all;
-    max-width: 9cm; /* ≤125% of QR code width (6cm) */
     text-align: center;
     cursor: default;
     line-height: 1.4;
     opacity: 1;
+    max-width: 80%;
+    margin: 0 auto;
   }
 
   .copied-tooltip,
   .qr-size-warning,
-  .share-card-print,
+  .share-card-print {
+    display: none !important;
+  }
+
   .print-hidden {
     display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 }
