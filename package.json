@@ -2,6 +2,11 @@
   "private": true,
   "scripts": {
     "dev": "bun serve.js",
-    "test": "bun test"
+    "test": "bun test",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.80.0"
   }
 }
