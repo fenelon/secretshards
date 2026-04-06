@@ -276,12 +276,31 @@
     if (!Array.isArray(shares) || shares.length < 2) {
       throw new Error('at least 2 shares are required');
     }
-    const expectedLen = shares[0].length;
+
+    // Detect format of each share
+    const parsed = shares.map(function (s) { return parseShare(s); });
+    for (let i = 0; i < parsed.length; i++) {
+      if (!parsed[i]) throw new Error('invalid share format');
+    }
+
+    // Check all shares are same version
+    const version = parsed[0].version;
+    for (let i = 1; i < parsed.length; i++) {
+      if (parsed[i].version !== version) {
+        throw new Error('cannot mix share formats');
+      }
+    }
+
+    // Extract payloads
+    const payloads = parsed.map(function (p) { return p.payload; });
+
+    // Validate payload lengths match
+    const expectedLen = payloads[0].length;
     if (!expectedLen || expectedLen % 88 !== 0) {
       throw new Error('invalid share format');
     }
-    for (let i = 1; i < shares.length; i++) {
-      if (shares[i].length !== expectedLen) {
+    for (let i = 1; i < payloads.length; i++) {
+      if (payloads[i].length !== expectedLen) {
         throw new Error('all shares must be the same length');
       }
     }
@@ -289,20 +308,16 @@
     // Maps any BigInt to its canonical representative in [0, PRIME)
     function modPos(v) { return ((v % PRIME) + PRIME) % PRIME; }
 
-    // Determine how many secret chunks each share encodes
     const count = expectedLen / 88;
-
     const secrets = [];
     for (let i = 0; i < count; i++) {
-      // Parse x and y for each share for this chunk
       const points = [];
-      for (let j = 0; j < shares.length; j++) {
-        const xStr = shares[j].substring(i * 88, i * 88 + 44);
-        const yStr = shares[j].substring(i * 88 + 44, i * 88 + 88);
+      for (let j = 0; j < payloads.length; j++) {
+        const xStr = payloads[j].substring(i * 88, i * 88 + 44);
+        const yStr = payloads[j].substring(i * 88 + 44, i * 88 + 88);
         points.push([fromBase64(xStr), fromBase64(yStr)]);
       }
 
-      // Lagrange interpolation at x=0
       let secret = 0n;
       for (let a = 0; a < points.length; a++) {
         let numerator = 1n;
@@ -313,7 +328,6 @@
             denominator = modPos(denominator * modPos(points[a][0] - points[b][0]));
           }
         }
-        // Compute contribution: y_a * numerator * modInverse(denominator)
         const contribution = modPos(points[a][1] * numerator * modInverse(denominator));
         secret = modPos(secret + contribution);
       }
@@ -321,7 +335,17 @@
       secrets.push(secret);
     }
 
-    return mergeInts(secrets);
+    const result = mergeInts(secrets);
+
+    // v2: validate magic prefix
+    if (version >= 2) {
+      if (!result.startsWith(MAGIC_PREFIX)) {
+        throw new Error('Could not recover the secret. Check that you have the right shares and enough of them.');
+      }
+      return result.substring(MAGIC_PREFIX.length);
+    }
+
+    return result;
   }
 
   const MAGIC_PREFIX = 'SSS:';
