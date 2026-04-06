@@ -173,6 +173,16 @@
       });
       card.appendChild(shareText);
 
+      // Print-only description (visible only in @media print)
+      const printInfo = document.createElement('div');
+      printInfo.className = 'share-print-info';
+      if (parsed && parsed.version >= 2 && parsed.name) {
+        printInfo.textContent = '"' + parsed.name + '" — created with SecretShards.com';
+      } else {
+        printInfo.textContent = 'Created with SecretShards.com';
+      }
+      card.appendChild(printInfo);
+
       const btnPdf = document.createElement('button');
       btnPdf.className = 'btn-small share-card-print';
       btnPdf.textContent = 'Print Share ' + (idx + 1);

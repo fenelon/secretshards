@@ -848,6 +848,11 @@ footer {
   color: var(--color-text);
 }
 
+/* Print info — hidden on screen, visible in print */
+.share-print-info {
+  display: none;
+}
+
 /* ============================================================
    Utility
    ============================================================ */
@@ -954,15 +959,11 @@ footer {
     margin-bottom: 1cqi;
   }
 
-  .share-label::after {
-    content: 'This is one share of a secret split using SecretShards.com.\A To reconstruct the secret, collect enough shares and combine them there.';
-    white-space: pre-line;
+  .share-print-info {
     display: block;
-    font-size: 11pt;
+    font-size: 13pt;
     font-size: 2cqi;
     font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
     color: #888;
     text-align: center;
     line-height: 1.4;
@@ -994,7 +995,7 @@ footer {
 
   .share-text {
     font-family: 'Courier New', Courier, monospace;
-    font-size: 10pt;
+    font-size: 12pt;
     font-size: 1.7cqi;
     color: #333;
     word-break: break-all;
