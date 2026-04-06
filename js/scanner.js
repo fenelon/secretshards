@@ -7,7 +7,7 @@
 
   if (!window.SSS) window.SSS = {};
 
-  var Scanner = {};
+  const Scanner = {};
 
   // Feature detection — camera requires getUserMedia + HTTPS (not file://)
   Scanner.hasCamera =
@@ -19,13 +19,14 @@
   // Returns: Promise<string> -- decoded text, or rejects
   Scanner.scanImage = function(file) {
     return createImageBitmap(file).then(function(bitmap) {
-      var canvas = document.createElement('canvas');
+      const canvas = document.createElement('canvas');
       canvas.width = bitmap.width;
       canvas.height = bitmap.height;
-      var ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
       ctx.drawImage(bitmap, 0, 0);
-      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      var result = SSS.QR.decode(imageData);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const result = SSS.QR.decode(imageData);
       if (!result) throw new Error('No QR code found in image');
       return result;
     });
@@ -41,11 +42,11 @@
       throw new Error('Camera scanning not available');
     }
 
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-    var stream = null;
-    var animationId = null;
-    var stopped = false;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    let stream = null;
+    let animationId = null;
+    let stopped = false;
 
     navigator.mediaDevices.getUserMedia({
       video: { facingMode: 'environment' }
@@ -67,8 +68,8 @@
         canvas.width = videoElement.videoWidth;
         canvas.height = videoElement.videoHeight;
         ctx.drawImage(videoElement, 0, 0);
-        var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        var result = SSS.QR.decode(imageData);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const result = SSS.QR.decode(imageData);
         if (result) {
           onDetect(result);
         } else {
