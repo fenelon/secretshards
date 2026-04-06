@@ -354,3 +354,51 @@ describe('v2 create', () => {
     expect(() => SSS.create(2, 3, 'x'.repeat(512), {})).not.toThrow();
   });
 });
+
+// ---------------------------------------------------------------------------
+// v2 combine
+// ---------------------------------------------------------------------------
+describe('v2 combine', () => {
+  it('recovers secret from v2 shares with name', () => {
+    const shares = SSS.create(3, 5, 'hello world', { name: 'Test' });
+    const recovered = SSS.combine(shares.slice(0, 3));
+    expect(recovered).toBe('hello world');
+  });
+
+  it('recovers secret from v2 shares without name', () => {
+    const shares = SSS.create(2, 3, 'no name secret', {});
+    const recovered = SSS.combine(shares.slice(0, 2));
+    expect(recovered).toBe('no name secret');
+  });
+
+  it('throws on wrong v2 shares (validation failure)', () => {
+    const shares1 = SSS.create(2, 3, 'secret one', { name: 'A' });
+    const shares2 = SSS.create(2, 3, 'secret two', { name: 'B' });
+    expect(() => SSS.combine([shares1[0], shares2[1]])).toThrow('Could not recover');
+  });
+
+  it('throws when mixing v0 and v2 shares', () => {
+    const v0 = SSS.create(2, 3, 'test secret');
+    const v2 = SSS.create(2, 3, 'test secret', {});
+    expect(() => SSS.combine([v0[0], v2[0]])).toThrow('cannot mix');
+  });
+
+  it('still returns raw result for v0 shares', () => {
+    const shares = SSS.create(2, 3, 'v0 secret');
+    expect(SSS.combine(shares.slice(0, 2))).toBe('v0 secret');
+  });
+
+  it('recovers 512-byte secret in v2 mode', () => {
+    const big = 'x'.repeat(512);
+    const shares = SSS.create(2, 3, big, {});
+    const recovered = SSS.combine(shares.slice(0, 2));
+    expect(recovered).toBe(big);
+  });
+
+  it('recovers multibyte UTF-8 in v2 mode', () => {
+    const secret = '\u4f60\u597d \ud83d\udd12 caf\u00e9';
+    const shares = SSS.create(2, 3, secret, { name: 'utf8' });
+    const recovered = SSS.combine(shares.slice(0, 2));
+    expect(recovered).toBe(secret);
+  });
+});
