@@ -306,3 +306,51 @@ describe('sanitizeName', () => {
     expect(SSS.sanitizeName(undefined)).toBe('');
   });
 });
+
+// ---------------------------------------------------------------------------
+// v2 create
+// ---------------------------------------------------------------------------
+describe('v2 create', () => {
+  it('produces v2 shares with name', () => {
+    const shares = SSS.create(3, 5, 'secret', { name: 'Backup' });
+    expect(shares).toHaveLength(5);
+    shares.forEach((s) => {
+      expect(s).toMatch(/^02:03:Backup:/);
+      expect(SSS.isValidShare(s)).toBe(true);
+    });
+  });
+
+  it('produces v2 shares without name', () => {
+    const shares = SSS.create(2, 3, 'secret', {});
+    shares.forEach((s) => {
+      expect(s).toMatch(/^02:02::/);
+      expect(SSS.isValidShare(s)).toBe(true);
+    });
+  });
+
+  it('sanitizes name with spaces', () => {
+    const shares = SSS.create(2, 3, 'secret', { name: 'My Wallet' });
+    shares.forEach((s) => {
+      expect(s).toMatch(/^02:02:My_Wallet:/);
+    });
+  });
+
+  it('caps threshold at 99 in header', () => {
+    const shares = SSS.create(120, 130, 'big', { name: 'test' });
+    shares.forEach((s) => {
+      expect(s).toMatch(/^02:99:test:/);
+    });
+  });
+
+  it('produces v0 shares without options', () => {
+    const shares = SSS.create(2, 3, 'secret');
+    shares.forEach((s) => {
+      expect(s).not.toMatch(/^\d{2}:/);
+      expect(SSS.isValidShare(s)).toBe(true);
+    });
+  });
+
+  it('allows 512-byte secret in v2 mode', () => {
+    expect(() => SSS.create(2, 3, 'x'.repeat(512), {})).not.toThrow();
+  });
+});
