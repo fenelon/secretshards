@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "bun serve.js",
+    "test": "bun test"
+  }
+}

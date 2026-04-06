@@ -893,6 +893,7 @@ footer {
 @media (max-width: 480px) {
   .download-banner-inner {
     font-size: 12px;
+    text-align: left;
   }
 }
 

@@ -36,8 +36,12 @@ cat <<'MID2'
 MID2
 
 cat js/sss.js
-cat js/qr-generate.js
+cat js/qr-bundle.js
+cat js/qr.js
 cat js/scanner.js
+cat js/ui.js
+cat js/split.js
+cat js/combine.js
 cat js/app.js
 
 cat <<'FOOTER'

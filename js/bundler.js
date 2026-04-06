@@ -4,7 +4,7 @@
   const Bundler = {};
 
   const CSS_FILES = ['css/style.css'];
-  const JS_FILES = ['js/sss.js', 'js/qr-bundle.js', 'js/qr.js', 'js/scanner.js', 'js/app.js'];
+  const JS_FILES = ['js/sss.js', 'js/qr-bundle.js', 'js/qr.js', 'js/scanner.js', 'js/ui.js', 'js/split.js', 'js/combine.js', 'js/app.js'];
 
   Bundler.download = function() {
     const allPaths = ['index.html'].concat(CSS_FILES, JS_FILES);
@@ -66,7 +66,11 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }).catch(function(err) {
-      console.error('Bundling failed:', err);
+      var banner = document.getElementById('download-banner');
+      if (banner) {
+        var inner = banner.querySelector('.download-banner-inner');
+        if (inner) inner.textContent = 'Download failed: ' + err.message;
+      }
     });
   };
 

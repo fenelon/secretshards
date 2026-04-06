@@ -38,12 +38,8 @@
     const label = document.createElement('div');
     label.className = 'combine-card-label';
     const parsed = SSS.parseShare(shareData);
-    if (parsed && parsed.version >= 2) {
-      if (parsed.name) {
-        label.textContent = parsed.name + ' \u2014 need ' + parsed.threshold;
-      } else {
-        label.textContent = 'Share (need ' + parsed.threshold + ')';
-      }
+    if (parsed && parsed.version >= 2 && parsed.name) {
+      label.textContent = parsed.name;
     } else {
       label.textContent = 'Share';
     }
@@ -51,7 +47,6 @@
 
     const preview = document.createElement('div');
     preview.className = 'combine-card-preview';
-    preview.textContent = shareData.substring(0, 20) + '...';
     card.appendChild(preview);
 
     const btnRemove = document.createElement('button');
@@ -237,14 +232,15 @@
       const lbl = c.querySelector('.combine-card-label');
       if (!lbl) return;
       const parsed = SSS.parseShare(c.dataset.share);
-      if (parsed && parsed.version >= 2) {
-        if (parsed.name) {
-          lbl.textContent = parsed.name + ' \u2014 need ' + parsed.threshold;
-        } else {
-          lbl.textContent = 'Share ' + (i + 1) + ' (need ' + parsed.threshold + ')';
-        }
+      if (parsed && parsed.version >= 2 && parsed.name) {
+        lbl.textContent = parsed.name;
       } else {
         lbl.textContent = 'Share ' + (i + 1);
+      }
+      var preview = c.querySelector('.combine-card-preview');
+      if (preview) {
+        var pl = parsed && parsed.payload ? parsed.payload : c.dataset.share;
+        preview.textContent = pl.substring(0, 20) + '\u2026';
       }
     });
   }
@@ -288,7 +284,27 @@
   }
 
   function validateCombine() {
-    btnCombine.disabled = getValidShares().length < 2;
+    var shares = getValidShares();
+    var count = shares.length;
+    var threshold = 0;
+    for (var i = 0; i < shares.length; i++) {
+      var parsed = SSS.parseShare(shares[i]);
+      if (parsed && parsed.threshold) {
+        threshold = parsed.threshold;
+        break;
+      }
+    }
+    if (threshold > 0 && count < threshold) {
+      var remaining = threshold - count;
+      btnCombine.textContent = 'Combine \u2014 need ' + remaining + ' more';
+      btnCombine.disabled = true;
+    } else if (count >= 2) {
+      btnCombine.textContent = 'Combine';
+      btnCombine.disabled = false;
+    } else {
+      btnCombine.textContent = 'Combine';
+      btnCombine.disabled = true;
+    }
   }
 
   createAddShareCard();
