@@ -200,7 +200,7 @@
    * Each share is a concatenation of base64(x) + base64(y) pairs, one per
    * secret chunk (44 chars each), giving a total length of chunks * 88 chars.
    */
-  function create(minimum, total, raw) {
+  function create(minimum, total, raw, options) {
     if (minimum < 2) {
       throw new Error('minimum must be >= 2');
     }
@@ -216,7 +216,11 @@
       throw new Error('secret exceeds 512 bytes');
     }
 
-    const secrets = splitInts(raw);
+    // v2: prepend magic prefix for validation on combine
+    const isV2 = options !== undefined;
+    const secretToSplit = isV2 ? MAGIC_PREFIX + raw : raw;
+
+    const secrets = splitInts(secretToSplit);
     const shares = [];
 
     // Pre-generate unique random x-values for each share
@@ -230,22 +234,29 @@
     }
 
     // Build polynomial for each secret chunk and evaluate at each x
-    // Start by initialising share strings to empty
     for (let s = 0; s < total; s++) {
       shares.push('');
     }
 
     for (let i = 0; i < secrets.length; i++) {
-      // Build polynomial coefficients: [secret[i], r1, r2, ..., r_{minimum-1}]
       const coefficients = [secrets[i]];
       for (let k = 1; k < minimum; k++) {
         coefficients.push(random());
       }
 
-      // Evaluate polynomial at each x and append x+y pair to the share string
       for (let s = 0; s < total; s++) {
         const y = evaluatePolynomial(coefficients, xValues[s]);
         shares[s] += toBase64(xValues[s]) + toBase64(y);
+      }
+    }
+
+    // v2: prepend header to each share
+    if (isV2) {
+      const name = sanitizeName(options.name || '');
+      const threshold = String(Math.min(minimum, 99)).padStart(2, '0');
+      const header = '02:' + threshold + ':' + name + ':';
+      for (let s = 0; s < total; s++) {
+        shares[s] = header + shares[s];
       }
     }
 
