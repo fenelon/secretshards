@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head><title>QR Decode Test</title></head>
+<body style="font-family:monospace;padding:1em;background:#111;color:#ccc">
+  <h2>QR Decode Test</h2>
+  <p>Select a QR code image to test decoding:</p>
+  <input type="file" id="file" accept="image/*">
+  <pre id="result" style="margin-top:1em;white-space:pre-wrap;word-break:break-all"></pre>
+  <canvas id="canvas" style="display:none"></canvas>
+
+  <script src="../js/sss.js"></script>
+  <script src="../js/qr-bundle.js"></script>
+  <script src="../js/qr.js"></script>
+  <script>
+    var nativeDetector = (typeof BarcodeDetector !== 'undefined')
+      ? new BarcodeDetector({ formats: ['qr_code'] })
+      : null;
+
+    document.getElementById('file').addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var result = document.getElementById('result');
+      result.textContent = 'Processing...\n\nNative BarcodeDetector: ' + (nativeDetector ? 'available' : 'NOT available');
+
+      var out = '';
+
+      createImageBitmap(file).then(function(bitmap) {
+        out += 'Image: ' + bitmap.width + 'x' + bitmap.height + '\n';
+        out += 'Native BarcodeDetector: ' + (nativeDetector ? 'YES' : 'NO') + '\n\n';
+
+        var tests = [];
+
+        // Test 1: paulmillr-qr via canvas (with smoothing)
+        tests.push(function() {
+          var canvas = document.getElementById('canvas');
+          canvas.width = bitmap.width;
+          canvas.height = bitmap.height;
+          var ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.drawImage(bitmap, 0, 0);
+          var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          var r = SSS.QR.decode(imageData);
+          out += 'paulmillr (smoothed):     ' + (r ? 'OK (' + r.length + ' chars)' : 'FAILED') + '\n';
+          return Promise.resolve();
+        });
+
+        // Test 2: paulmillr-qr via canvas (no smoothing)
+        tests.push(function() {
+          var canvas = document.getElementById('canvas');
+          canvas.width = bitmap.width;
+          canvas.height = bitmap.height;
+          var ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(bitmap, 0, 0);
+          var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          var r = SSS.QR.decode(imageData);
+          out += 'paulmillr (no smooth):    ' + (r ? 'OK (' + r.length + ' chars)' : 'FAILED') + '\n';
+          return Promise.resolve();
+        });
+
+        // Test 3: Native BarcodeDetector on Blob
+        tests.push(function() {
+          if (!nativeDetector) {
+            out += 'native (blob):            SKIPPED (not available)\n';
+            return Promise.resolve();
+          }
+          return nativeDetector.detect(file).then(function(barcodes) {
+            if (barcodes.length > 0) {
+              out += 'native (blob):            OK (' + barcodes[0].rawValue.length + ' chars)\n';
+            } else {
+              out += 'native (blob):            FAILED (no barcodes found)\n';
+            }
+          }).catch(function(err) {
+            out += 'native (blob):            ERROR (' + err.message + ')\n';
+          });
+        });
+
+        // Test 4: Native BarcodeDetector on ImageBitmap
+        tests.push(function() {
+          if (!nativeDetector) {
+            out += 'native (ImageBitmap):     SKIPPED (not available)\n';
+            return Promise.resolve();
+          }
+          return nativeDetector.detect(bitmap).then(function(barcodes) {
+            if (barcodes.length > 0) {
+              out += 'native (ImageBitmap):     OK (' + barcodes[0].rawValue.length + ' chars)\n';
+            } else {
+              out += 'native (ImageBitmap):     FAILED (no barcodes found)\n';
+            }
+          }).catch(function(err) {
+            out += 'native (ImageBitmap):     ERROR (' + err.message + ')\n';
+          });
+        });
+
+        // Run all tests sequentially
+        var chain = Promise.resolve();
+        tests.forEach(function(t) { chain = chain.then(t); });
+        return chain.then(function() {
+          result.textContent = out;
+        });
+      }).catch(function(err) {
+        result.textContent = 'Error: ' + err.message;
+      });
+    });
+  </script>
+</body>
+</html>
