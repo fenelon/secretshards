@@ -238,6 +238,115 @@
       assert(succeeded512, 'create succeeds for 512-byte secret');
 
       // -----------------------------------------------------------------------
+      // create() validation
+      // -----------------------------------------------------------------------
+      section('create() validation');
+
+      var threwTotal256 = false;
+      try { SSS.create(2, 256, 'test'); } catch (e) { threwTotal256 = true; }
+      assert(threwTotal256, 'create throws for total > 255');
+
+      var threwMin1 = false;
+      try { SSS.create(1, 3, 'test'); } catch (e) { threwMin1 = true; }
+      assert(threwMin1, 'create throws for minimum < 2');
+
+      var threwMinGtTotal = false;
+      try { SSS.create(5, 3, 'test'); } catch (e) { threwMinGtTotal = true; }
+      assert(threwMinGtTotal, 'create throws for minimum > total');
+
+      // -----------------------------------------------------------------------
+      // combine() validation
+      // -----------------------------------------------------------------------
+      section('combine() validation');
+
+      var threwNoShares = false;
+      try { SSS.combine([]); } catch (e) { threwNoShares = true; }
+      assert(threwNoShares, 'combine throws for empty array');
+
+      var threwOneShare = false;
+      try { SSS.combine([rubyShares[0]]); } catch (e) { threwOneShare = true; }
+      assert(threwOneShare, 'combine throws for single share');
+
+      var threwMismatch = false;
+      var shortShare = SSS.create(2, 2, 'ab');
+      var longShare = SSS.create(2, 2, 'x'.repeat(64));
+      try { SSS.combine([shortShare[0], longShare[0]]); } catch (e) { threwMismatch = true; }
+      assert(threwMismatch, 'combine throws for mismatched share lengths');
+
+      // Wrong shares produce garbage, not the original secret
+      var wrongShares = SSS.create(3, 5, 'correct secret');
+      var wrongRecovered = SSS.combine(wrongShares.slice(0, 2));
+      assert(wrongRecovered !== 'correct secret', 'combine with fewer than minimum shares does not recover secret');
+
+      // -----------------------------------------------------------------------
+      // Multibyte UTF-8 round-trip
+      // -----------------------------------------------------------------------
+      section('Multibyte UTF-8');
+
+      var utf8Cases = [
+        '\u00e9\u00e0\u00fc',                      // accented Latin
+        '\u4f60\u597d\u4e16\u754c',                // CJK (Chinese)
+        '\ud83d\udd12\ud83d\udee1\ufe0f\ud83d\udd11',  // emoji (lock, shield, key)
+        'mix: caf\u00e9 \u2615 \u2603\ufe0f end',       // mixed ASCII + multibyte
+      ];
+
+      utf8Cases.forEach(function (s) {
+        var shares = SSS.create(2, 3, s);
+        var recovered = SSS.combine(shares.slice(0, 2));
+        assertEqual(recovered, s, 'UTF-8 round-trip: "' + s.slice(0, 12) + '"');
+      });
+
+      // -----------------------------------------------------------------------
+      // isValidShare edge cases
+      // -----------------------------------------------------------------------
+      section('isValidShare edge cases');
+
+      assert(!SSS.isValidShare(null), 'isValidShare returns false for null');
+      assert(!SSS.isValidShare(undefined), 'isValidShare returns false for undefined');
+      assert(!SSS.isValidShare(123), 'isValidShare returns false for number');
+
+      // -----------------------------------------------------------------------
+      // v2 create + combine round-trip
+      // -----------------------------------------------------------------------
+      section('v2 create + combine');
+
+      var v2Shares = SSS.create(3, 5, 'v2 hello', { name: 'Browser_test' });
+      assertEqual(v2Shares.length, 5, 'v2 create returns 5 shares');
+      assert(v2Shares[0].indexOf('02:03:Browser_test:') === 0, 'v2 share has correct header');
+      var v2Recovered = SSS.combine(v2Shares.slice(0, 3));
+      assertEqual(v2Recovered, 'v2 hello', 'v2 combine recovers secret');
+
+      // v2 without name
+      var v2NoName = SSS.create(2, 3, 'no name', {});
+      assert(v2NoName[0].indexOf('02:02::') === 0, 'v2 no-name share has empty name field');
+      assertEqual(SSS.combine(v2NoName.slice(0, 2)), 'no name', 'v2 no-name combine recovers secret');
+
+      // v2 validation failure
+      var v2A = SSS.create(2, 3, 'secret A', { name: 'A' });
+      var v2B = SSS.create(2, 3, 'secret B', { name: 'B' });
+      var v2ValidationFailed = false;
+      try { SSS.combine([v2A[0], v2B[1]]); } catch (e) { v2ValidationFailed = true; }
+      assert(v2ValidationFailed, 'v2 combine throws on wrong shares');
+
+      // -----------------------------------------------------------------------
+      // parseShare
+      // -----------------------------------------------------------------------
+      section('parseShare');
+
+      var parsedV2 = SSS.parseShare(v2Shares[0]);
+      assert(parsedV2 !== null, 'parseShare returns non-null for v2 share');
+      assertEqual(parsedV2.version, 2, 'parseShare version is 2');
+      assertEqual(parsedV2.threshold, 3, 'parseShare threshold is 3');
+      assertEqual(parsedV2.name, 'Browser test', 'parseShare name converts underscores to spaces');
+
+      var v0Shares = SSS.create(2, 3, 'v0 test');
+      var parsedV0 = SSS.parseShare(v0Shares[0]);
+      assertEqual(parsedV0.version, 0, 'parseShare version is 0 for v0 share');
+      assertEqual(parsedV0.threshold, null, 'parseShare threshold is null for v0');
+
+      assertEqual(SSS.parseShare('garbage'), null, 'parseShare returns null for garbage');
+
+      // -----------------------------------------------------------------------
       // QR code generation
       // -----------------------------------------------------------------------
       section('QR code generation');
