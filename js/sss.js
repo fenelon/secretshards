@@ -15,12 +15,16 @@
    */
   function random() {
     const bytes = new Uint8Array(32);
-    crypto.getRandomValues(bytes);
-    let hex = '';
-    for (let i = 0; i < bytes.length; i++) {
-      hex += bytes[i].toString(16).padStart(2, '0');
-    }
-    return BigInt('0x' + hex) % PRIME;
+    let value;
+    do {
+      crypto.getRandomValues(bytes);
+      let hex = '';
+      for (let i = 0; i < bytes.length; i++) {
+        hex += bytes[i].toString(16).padStart(2, '0');
+      }
+      value = BigInt('0x' + hex);
+    } while (value >= PRIME);
+    return value;
   }
 
   /**
@@ -90,7 +94,7 @@
   function evaluatePolynomial(coefficients, value) {
     let result = 0n;
     for (let i = coefficients.length - 1; i >= 0; i--) {
-      result = (result * value + BigInt(coefficients[i])) % PRIME;
+      result = (result * value + coefficients[i]) % PRIME;
     }
     return result;
   }
@@ -203,6 +207,9 @@
     if (total < minimum) {
       throw new Error('total must be >= minimum');
     }
+    if (total > 255) {
+      throw new Error('total must be <= 255');
+    }
     const encoder = new TextEncoder();
     const byteLen = encoder.encode(raw).length;
     if (byteLen > 512) {
@@ -232,11 +239,7 @@
       // Build polynomial coefficients: [secret[i], r1, r2, ..., r_{minimum-1}]
       const coefficients = [secrets[i]];
       for (let k = 1; k < minimum; k++) {
-        let coeff;
-        do {
-          coeff = random();
-        } while (coefficients.some(function (v) { return v === coeff; }));
-        coefficients.push(coeff);
+        coefficients.push(random());
       }
 
       // Evaluate polynomial at each x and append x+y pair to the share string
@@ -259,11 +262,24 @@
    * chunk at x=0.
    */
   function combine(shares) {
+    if (!Array.isArray(shares) || shares.length < 2) {
+      throw new Error('at least 2 shares are required');
+    }
+    const expectedLen = shares[0].length;
+    if (!expectedLen || expectedLen % 88 !== 0) {
+      throw new Error('invalid share format');
+    }
+    for (let i = 1; i < shares.length; i++) {
+      if (shares[i].length !== expectedLen) {
+        throw new Error('all shares must be the same length');
+      }
+    }
+
     // Maps any BigInt to its canonical representative in [0, PRIME)
     function modPos(v) { return ((v % PRIME) + PRIME) % PRIME; }
 
     // Determine how many secret chunks each share encodes
-    const count = shares[0].length / 88;
+    const count = expectedLen / 88;
 
     const secrets = [];
     for (let i = 0; i < count; i++) {
@@ -297,34 +313,76 @@
     return mergeInts(secrets);
   }
 
-  /**
-   * Returns true if candidate is a syntactically valid share string.
-   *
-   * A valid share has length > 0, length divisible by 88, and every 44-char
-   * block decodes (via fromBase64) to a value in [0, PRIME].
-   *
-   * @param {string} candidate
-   * @returns {boolean}
-   */
-  function isValidShare(candidate) {
-    if (!candidate || candidate.length === 0 || candidate.length % 88 !== 0) {
-      return false;
+  const MAGIC_PREFIX = 'SSS:';
+
+  function sanitizeName(name) {
+    if (!name) return '';
+    return String(name).replace(/ /g, '_').substring(0, 20);
+  }
+
+  function parseShare(candidate) {
+    if (!candidate || typeof candidate !== 'string') return null;
+
+    if (/^\d{2}:/.test(candidate)) {
+      const first = candidate.indexOf(':');
+      const second = candidate.indexOf(':', first + 1);
+      const third = candidate.indexOf(':', second + 1);
+      if (first === -1 || second === -1 || third === -1) return null;
+
+      const versionStr = candidate.substring(0, first);
+      const thresholdStr = candidate.substring(first + 1, second);
+      const name = candidate.substring(second + 1, third);
+      const payload = candidate.substring(third + 1);
+
+      if (!/^\d{2}$/.test(versionStr) || !/^\d{2}$/.test(thresholdStr)) return null;
+      if (!payload || payload.length === 0 || payload.length % 88 !== 0) return null;
+      if (!isValidSharePayload(payload)) return null;
+
+      return {
+        version: parseInt(versionStr, 10),
+        threshold: parseInt(thresholdStr, 10),
+        name: name.replace(/_/g, ' '),
+        payload: payload,
+      };
     }
-    const count = candidate.length / 88;
+
+    if (candidate.length > 0 && candidate.length % 88 === 0 && isValidSharePayload(candidate)) {
+      return {
+        version: 0,
+        threshold: null,
+        name: null,
+        payload: candidate,
+      };
+    }
+
+    return null;
+  }
+
+  function isValidSharePayload(payload) {
+    if (!payload || payload.length === 0 || payload.length % 88 !== 0) return false;
+    const count = payload.length / 88;
     for (let j = 0; j < count; j++) {
-      const xStr = candidate.substring(j * 88, j * 88 + 44);
-      const yStr = candidate.substring(j * 88 + 44, j * 88 + 88);
+      const xStr = payload.substring(j * 88, j * 88 + 44);
+      const yStr = payload.substring(j * 88 + 44, j * 88 + 88);
       try {
         const x = fromBase64(xStr);
         const y = fromBase64(yStr);
-        if (x < 0n || x > PRIME || y < 0n || y > PRIME) {
-          return false;
-        }
+        if (x < 0n || x >= PRIME || y < 0n || y >= PRIME) return false;
       } catch (e) {
         return false;
       }
     }
     return true;
+  }
+
+  /**
+   * Returns true if candidate is a syntactically valid share string.
+   *
+   * @param {string} candidate
+   * @returns {boolean}
+   */
+  function isValidShare(candidate) {
+    return parseShare(candidate) !== null;
   }
 
   /**
@@ -338,13 +396,19 @@
       + '-' + String(now.getHours()).padStart(2, '0')
       + String(now.getMinutes()).padStart(2, '0')
       + String(now.getSeconds()).padStart(2, '0');
-    const rand = Math.random().toString(36).substring(2, 8);
+    const randBytes = new Uint8Array(4);
+    crypto.getRandomValues(randBytes);
+    let rand = '';
+    for (let i = 0; i < randBytes.length; i++) {
+      rand += randBytes[i].toString(36).padStart(2, '0');
+    }
     return prefix + ts + '-' + rand;
   }
 
   // Attach to global namespace
   global.SSS = {
     _prime: PRIME,
+    _magicPrefix: MAGIC_PREFIX,
     random: random,
     splitInts: splitInts,
     mergeInts: mergeInts,
@@ -356,6 +420,8 @@
     create: create,
     combine: combine,
     isValidShare: isValidShare,
+    parseShare: parseShare,
+    sanitizeName: sanitizeName,
     timestampedName: timestampedName,
   };
 })(typeof window !== 'undefined' ? window : this);
