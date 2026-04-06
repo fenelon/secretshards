@@ -931,7 +931,7 @@ footer {
   }
 
   .share-label::after {
-    content: 'This is a piece of a shared secret created by SecretShards.com.\A You can recover it there if you have enough pieces (shares).';
+    content: 'This is one share of a secret split using SecretShards.com.\A To reconstruct the secret, collect enough shares and combine them there.';
     white-space: pre-line;
     display: block;
     font-size: 11pt;
@@ -944,6 +944,14 @@ footer {
     line-height: 1.4;
     margin-top: 6pt;
     margin-top: 0.8cqi;
+  }
+
+  .share-name {
+    font-size: 16pt;
+    font-size: 3cqi;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 2pt;
   }
 
   .share-qr {
