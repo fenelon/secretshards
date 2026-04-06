@@ -217,28 +217,39 @@
   }
 
   function printSingleShare(index) {
-    const cards = sharesList.querySelectorAll('.share-card');
+    var cards = sharesList.querySelectorAll('.share-card');
     cards.forEach(function (c, i) {
       if (i !== index) c.classList.add('print-hidden');
       else c.classList.add('print-single');
     });
 
-    const originalTitle = document.title;
+    var originalTitle = document.title;
     document.title = SSS.timestampedName(printPrefix() + 'share' + (index + 1) + '-');
-    window.print();
-    document.title = originalTitle;
 
-    cards.forEach(function (c) {
-      c.classList.remove('print-hidden');
-      c.classList.remove('print-single');
+    function cleanup() {
+      document.title = originalTitle;
+      cards.forEach(function (c) {
+        c.classList.remove('print-hidden');
+        c.classList.remove('print-single');
+      });
+    }
+
+    // iOS Safari: window.print() is async — clean up on afterprint
+    window.addEventListener('afterprint', function onAfter() {
+      window.removeEventListener('afterprint', onAfter);
+      cleanup();
     });
+    window.print();
   }
 
   btnPrint.addEventListener('click', function () {
-    const originalTitle = document.title;
+    var originalTitle = document.title;
     document.title = SSS.timestampedName(printPrefix());
+    window.addEventListener('afterprint', function onAfter() {
+      window.removeEventListener('afterprint', onAfter);
+      document.title = originalTitle;
+    });
     window.print();
-    document.title = originalTitle;
   });
 
   // ---------------------------------------------------------------------------
