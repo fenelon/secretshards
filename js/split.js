@@ -139,6 +139,12 @@
       }
       label.textContent = 'Share ' + (idx + 1) + (parsed && parsed.version >= 2 ? '' : ' of ' + total);
 
+      // Print-only description (visible only in @media print)
+      const printInfo = document.createElement('div');
+      printInfo.className = 'share-print-info';
+      printInfo.textContent = 'This is one share of a secret split using SecretShards.com.\nTo reconstruct the secret, collect enough shares and combine them there.';
+      card.appendChild(printInfo);
+
       const qrDiv = document.createElement('div');
       qrDiv.className = 'share-qr';
       const canvas = document.createElement('canvas');
@@ -172,12 +178,6 @@
         });
       });
       card.appendChild(shareText);
-
-      // Print-only description (visible only in @media print)
-      const printInfo = document.createElement('div');
-      printInfo.className = 'share-print-info';
-      printInfo.textContent = 'This is one share of a secret split using SecretShards.com.\nTo reconstruct the secret, collect enough shares and combine them there.';
-      card.appendChild(printInfo);
 
       const btnPdf = document.createElement('button');
       btnPdf.className = 'btn-small share-card-print';
