@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SSS Core Math Utilities Tests</title>
+  <style>
+    body { font-family: monospace; padding: 1em; background: #111; color: #ccc; }
+    h1 { color: #fff; }
+    .pass { color: #4caf50; }
+    .fail { color: #f44336; }
+    .section { margin-top: 1em; font-weight: bold; color: #aaa; }
+    #summary { margin-top: 1.5em; font-size: 1.2em; border-top: 1px solid #444; padding-top: 0.5em; }
+  </style>
+</head>
+<body>
+  <h1>SSS Core Math Utilities Tests</h1>
+  <div id="output"></div>
+  <div id="summary"></div>
+  <canvas id="test-canvas" width="200" height="200" style="display:none"></canvas>
+
+  <script src="../js/sss.js"></script>
+  <script src="../js/qr-bundle.js"></script>
+  <script src="../js/qr.js"></script>
+  <script>
+    (function () {
+      var passed = 0;
+      var failed = 0;
+      var output = document.getElementById('output');
+
+      function log(message, cls) {
+        var el = document.createElement('div');
+        el.textContent = message;
+        if (cls) el.className = cls;
+        output.appendChild(el);
+      }
+
+      function section(name) {
+        var el = document.createElement('div');
+        el.textContent = name;
+        el.className = 'section';
+        output.appendChild(el);
+      }
+
+      function assert(condition, message) {
+        if (condition) {
+          passed++;
+          log('  PASS: ' + message, 'pass');
+        } else {
+          failed++;
+          log('  FAIL: ' + message, 'fail');
+        }
+      }
+
+      function assertEqual(actual, expected, message) {
+        var ok = actual === expected;
+        if (ok) {
+          passed++;
+          log('  PASS: ' + message, 'pass');
+        } else {
+          failed++;
+          log('  FAIL: ' + message + ' — expected ' + String(expected) + ', got ' + String(actual), 'fail');
+        }
+      }
+
+      function summary() {
+        var el = document.getElementById('summary');
+        var total = passed + failed;
+        var text = 'Results: ' + passed + ' passed, ' + failed + ' failed out of ' + total + ' tests';
+        el.textContent = text;
+        el.className = failed === 0 ? 'pass' : 'fail';
+      }
+
+      // -----------------------------------------------------------------------
+      // toBase64 / fromBase64 round-trip
+      // -----------------------------------------------------------------------
+      section('toBase64 / fromBase64');
+
+      var PRIME = SSS._prime;
+      var b64Cases = [0n, 1n, 255n, 2n ** 128n, PRIME - 1n];
+
+      b64Cases.forEach(function (v) {
+        var encoded = SSS.toBase64(v);
+        assertEqual(encoded.length, 44, 'toBase64(' + v + ') length is 44');
+        var decoded = SSS.fromBase64(encoded);
+        assertEqual(decoded, v, 'fromBase64(toBase64(' + v + ')) round-trips');
+      });
+
+      // -----------------------------------------------------------------------
+      // splitInts / mergeInts round-trip
+      // -----------------------------------------------------------------------
+      section('splitInts / mergeInts');
+
+      var siCases = ['hello', 'a', 'x'.repeat(64)];
+
+      siCases.forEach(function (s) {
+        var chunks = SSS.splitInts(s);
+        assert(chunks.length > 0, 'splitInts("' + s.slice(0, 8) + (s.length > 8 ? '…' : '') + '") produces chunks > 0');
+        var merged = SSS.mergeInts(chunks);
+        assertEqual(merged, s, 'mergeInts(splitInts("' + s.slice(0, 8) + (s.length > 8 ? '…' : '') + '")) round-trips');
+      });
+
+      // -----------------------------------------------------------------------
+      // evaluatePolynomial
+      // -----------------------------------------------------------------------
+      section('evaluatePolynomial');
+
+      // f(x) = 3 + 2x + x^2  =>  coefficients = [3, 2, 1]  =>  f(2) = 3+4+4 = 11
+      var polyResult = SSS.evaluatePolynomial([3n, 2n, 1n], 2n);
+      assertEqual(polyResult, 11n, 'f(x)=3+2x+x² at x=2 equals 11');
+
+      // -----------------------------------------------------------------------
+      // modInverse
+      // -----------------------------------------------------------------------
+      section('modInverse');
+
+      var miCases = [1n, 2n, 12345n, PRIME - 1n];
+
+      miCases.forEach(function (v) {
+        var inv = SSS.modInverse(v);
+        var product = (v * inv) % PRIME;
+        assertEqual(product, 1n, 'v=' + v + ': (v * modInverse(v)) % prime === 1n');
+      });
+
+      // -----------------------------------------------------------------------
+      // random
+      // -----------------------------------------------------------------------
+      section('random');
+
+      var r1 = SSS.random();
+      var r2 = SSS.random();
+      assert(r1 >= 0n && r1 < PRIME, 'random() result r1 is in [0, prime)');
+      assert(r2 >= 0n && r2 < PRIME, 'random() result r2 is in [0, prime)');
+      assert(r1 !== r2, 'two calls to random() produce different values');
+
+      // -----------------------------------------------------------------------
+      // create + combine round-trip
+      // -----------------------------------------------------------------------
+      section('create + combine round-trip');
+
+      var roundTripCases = [
+        { secret: 'hello world',                                                   minimum: 2, total: 3 },
+        { secret: 'N17FigASkL6p1EOgJhRaIquQLGvYV0',                               minimum: 4, total: 5 },
+        { secret: '0y10VAfmyH7GLQY6QccCSLKJi8iFgpcSBTLyYOGbiYPqOpStAf1OYuzEBzZR', minimum: 3, total: 6 },
+      ];
+
+      roundTripCases.forEach(function (tc) {
+        var shares;
+        try {
+          shares = SSS.create(tc.minimum, tc.total, tc.secret);
+        } catch (e) {
+          assert(false, 'create("' + tc.secret.slice(0, 12) + '…", ' + tc.minimum + ', ' + tc.total + ') threw: ' + e.message);
+          return;
+        }
+        assertEqual(shares.length, tc.total,
+          'create returns ' + tc.total + ' shares for secret "' + tc.secret.slice(0, 12) + '…"');
+        var recovered;
+        try {
+          recovered = SSS.combine(shares.slice(0, tc.minimum));
+        } catch (e) {
+          assert(false, 'combine threw: ' + e.message);
+          return;
+        }
+        assertEqual(recovered, tc.secret,
+          'combine(first ' + tc.minimum + ' shares) recovers secret "' + tc.secret.slice(0, 12) + '…"');
+      });
+
+      // -----------------------------------------------------------------------
+      // Ruby CLI cross-compatibility
+      // -----------------------------------------------------------------------
+      section('Ruby CLI cross-compatibility');
+
+      // These shares were generated by the Ruby CLI for secret "test-pass" with minimum=3
+      var rubyShares = [
+        'bxJfjy0WZlJiTSgUStjCdaZ2z4vTLDP9T2Jma-GHSUQ=NINiBy3SjCcwQgOrLPMm0121vncBV8GT1jCeQwpuM78=',
+        'U-gjIfmgANme26985FLzut_KCyi9kzvrSjrFIlOcRUA=mrBQRUX4CRk8gSISWk2wOzWu_JKgXUTjJGOhEQ5orIU=',
+        'JqX7ufXkRusNtPqs5CCPvGwEwmVHRkLiuzRap4iKyUU=kCcRu4f3SQ7NpOYt9wjwPAfJN_rpSBzFfl9UPRoQwFM=',
+      ];
+      var rubyExpected = 'test-pass';
+      var rubyRecovered;
+      try {
+        rubyRecovered = SSS.combine(rubyShares);
+      } catch (e) {
+        assert(false, 'Ruby CLI combine threw: ' + e.message);
+        rubyRecovered = null;
+      }
+      if (rubyRecovered !== null) {
+        assertEqual(rubyRecovered, rubyExpected, 'Ruby CLI shares combine to "' + rubyExpected + '"');
+      }
+
+      // -----------------------------------------------------------------------
+      // isValidShare
+      // -----------------------------------------------------------------------
+      section('isValidShare');
+
+      // Valid shares from the Ruby cross-compat set
+      rubyShares.forEach(function (s, idx) {
+        assert(SSS.isValidShare(s), 'isValidShare returns true for Ruby share #' + (idx + 1));
+      });
+
+      // Valid JS-generated share
+      var jsShares = SSS.create(2, 2, 'validity check');
+      jsShares.forEach(function (s, idx) {
+        assert(SSS.isValidShare(s), 'isValidShare returns true for JS-generated share #' + (idx + 1));
+      });
+
+      // Invalid: empty string
+      assert(!SSS.isValidShare(''), 'isValidShare returns false for empty string');
+
+      // Invalid: garbage
+      assert(!SSS.isValidShare('not-a-valid-share'), 'isValidShare returns false for garbage input');
+
+      // Invalid: wrong length (not multiple of 88)
+      assert(!SSS.isValidShare('AAAA'), 'isValidShare returns false for string of length 4');
+
+      // -----------------------------------------------------------------------
+      // Secret length limit (512-byte max)
+      // -----------------------------------------------------------------------
+      section('Secret length limit');
+
+      var secret512 = 'x'.repeat(512);
+      var secret513 = 'x'.repeat(513);
+
+      var threw513 = false;
+      try {
+        SSS.create(2, 3, secret513);
+      } catch (e) {
+        threw513 = true;
+      }
+      assert(threw513, 'create throws for 513-byte secret');
+
+      var succeeded512 = false;
+      try {
+        SSS.create(2, 3, secret512);
+        succeeded512 = true;
+      } catch (e) {
+        succeeded512 = false;
+      }
+      assert(succeeded512, 'create succeeds for 512-byte secret');
+
+      // -----------------------------------------------------------------------
+      // QR code generation
+      // -----------------------------------------------------------------------
+      section('QR code generation');
+
+      var qrShare = SSS.create(2, 3, 'qr-test-secret')[0];
+      var testCanvas = document.getElementById('test-canvas');
+
+      // Render to the test canvas and verify it has non-empty image data
+      try {
+        SSS.QR.generate(qrShare, testCanvas);
+        var imgData = testCanvas.getContext('2d').getImageData(0, 0, testCanvas.width, testCanvas.height);
+        var hasNonWhite = false;
+        for (var i = 0; i < imgData.data.length; i += 4) {
+          if (imgData.data[i] === 0 && imgData.data[i + 3] === 255) { hasNonWhite = true; break; }
+        }
+        assert(hasNonWhite, 'QR.generate renders non-empty image data to canvas');
+      } catch (e) {
+        assert(false, 'QR.generate threw: ' + e.message);
+      }
+
+      // Generate a data URL and verify format
+      try {
+        var dataURL = SSS.QR.toDataURL(qrShare);
+        assert(dataURL.indexOf('data:image/png') === 0, 'QR.toDataURL returns a string starting with data:image/png');
+        assert(dataURL.length > 100, 'QR.toDataURL returns a non-trivial data URL');
+      } catch (e) {
+        assert(false, 'QR.toDataURL threw: ' + e.message);
+      }
+
+      // -----------------------------------------------------------------------
+      summary();
+    })();
+  </script>
+</body>
+</html>

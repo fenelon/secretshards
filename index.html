@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SecretShards — Split secrets with Shamir's algorithm</title>
+  <meta name="description" content="Split secrets into shares using Shamir's Secret Sharing. Recover with a threshold of shares. Runs entirely in your browser — nothing is sent to any server.">
+  <meta property="og:title" content="SecretShards — Split secrets with Shamir's algorithm">
+  <meta property="og:description" content="Split secrets into shares using Shamir's Secret Sharing. Runs entirely in your browser.">
+  <meta property="og:url" content="https://secretshards.com">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <link rel="canonical" href="https://secretshards.com">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta property="og:image" content="https://secretshards.com/og-banner.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <link rel="icon" type="image/svg+xml" href="shard.svg">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Download banner (hosted version only) -->
+  <div id="download-banner" class="download-banner">
+    <div class="download-banner-inner">
+      This app runs entirely in your browser — nothing is sent to any server.<br>
+      For extremely sensitive secrets, <strong><a href="#" id="download-link">download and run offline</a></strong>.
+      See <a href="#offline-mode">offline mode notes</a> below.
+    </div>
+  </div>
+
+  <main>
+    <header>
+      <h1 class="logo"><span class="logo-secret">Secret</span><span class="logo-shards">Shards</span><span class="logo-shard">&#9650;</span></h1>
+      <p class="subtitle">Split secrets with Shamir's algorithm. Recover with a threshold of shares.</p>
+    </header>
+
+    <!-- Mode toggle -->
+    <nav class="mode-toggle" role="tablist">
+      <a href="#" id="mode-split" class="mode-link active" role="tab" aria-selected="true" aria-controls="section-split">Split</a>
+      <a href="#" id="mode-combine" class="mode-link" role="tab" aria-selected="false" aria-controls="section-combine">Combine</a>
+    </nav>
+
+    <!-- Split mode -->
+    <section id="section-split" role="tabpanel" aria-labelledby="mode-split">
+      <div class="field-group">
+        <label class="label">Threshold</label>
+        <div class="threshold-row">
+          <input type="number" id="input-minimum" min="2" max="255" value="3" class="threshold-input" aria-label="Shares needed to recover">
+          <span class="threshold-of">of</span>
+          <input type="number" id="input-total" min="2" max="255" value="5" class="threshold-input" aria-label="Total shares to create">
+          <span class="inline-error" id="threshold-error" hidden></span>
+        </div>
+        <p class="hint" id="threshold-hint">Minimum needed to recover — total shares to create</p>
+      </div>
+
+      <div class="field-group">
+        <label class="label" for="input-secret">Secret</label>
+        <textarea id="input-secret" rows="4" placeholder="Enter your secret..."></textarea>
+        <div class="byte-counter">
+          <span id="byte-count">0</span> / 512 bytes
+        </div>
+        <div id="over-limit-msg" class="over-limit-msg" hidden>Secret exceeds 512 bytes. Shorten it to enable splitting.</div>
+        <div id="qr-warning" class="qr-size-warning" hidden>Shares will produce large QR codes — print at high resolution for reliable scanning.</div>
+      </div>
+
+      <div class="actions">
+        <button id="btn-split" class="btn-primary" disabled>Split</button>
+        <button id="btn-clear" class="btn-secondary" hidden>Clear All</button>
+        <div id="split-error" class="inline-error" hidden></div>
+      </div>
+
+      <div id="split-output" class="output" hidden>
+        <div class="output-header">
+          <h2>Shares</h2>
+          <button id="btn-print" class="btn-secondary">Print All</button>
+        </div>
+        <div id="shares-list"></div>
+      </div>
+    </section>
+
+    <!-- Combine mode -->
+    <section id="section-combine" role="tabpanel" aria-labelledby="mode-combine" hidden>
+      <div id="share-inputs" class="combine-card-grid"></div>
+
+      <div class="actions">
+        <button id="btn-combine" class="btn-primary" disabled>Combine</button>
+        <div id="combine-error" class="inline-error" hidden></div>
+      </div>
+
+      <div id="combine-output" class="output" hidden>
+        <h2>Recovered Secret</h2>
+        <div class="recovered-secret">
+          <textarea id="recovered-text" readonly rows="4"></textarea>
+          <button id="btn-copy-secret" class="btn-secondary">Copy</button>
+        <div id="aria-status" class="sr-only" aria-live="polite"></div>
+        </div>
+        <p class="hint">If this doesn't look right, check that you're using the correct shares.</p>
+      </div>
+    </section>
+
+    <footer id="about">
+      <section class="footer-description">
+        <h2>What is Secret Sharing?</h2>
+        <p>Secret sharing lets you split sensitive information into multiple parts called "shares." You choose how many shares to create and how many are needed to recover the original — for example, split into 5 shares where any 3 can reconstruct the secret. This uses Shamir's Secret Sharing, a proven cryptographic algorithm trusted since 1979. No single share is useful on its own — only the right combination can recover your secret.</p>
+        <p>SecretShards is built to last. It has zero external dependencies — just plain HTML, CSS, and JavaScript with no frameworks, no build tools, and no CDN links that could go offline. The only vendored library is a QR code generator and scanner. Download a copy today and it will work exactly the same in 50 years — even if this domain goes down.</p>
+
+        <h3>When to use it</h3>
+        <ul class="use-cases">
+          <li><strong>Personal security</strong> — Split a password manager master password among family members, so no single person holds the full key but the family can recover access if needed.</li>
+          <li><strong>Cryptocurrency</strong> — Back up a wallet seed phrase or private key. Store shares in separate locations so a single break-in or lost device doesn't mean lost funds.</li>
+          <li><strong>Business continuity</strong> — Distribute access to critical systems among team leads. If someone leaves or is unavailable, the remaining team can still recover access.</li>
+          <li><strong>Estate planning</strong> — Include shares of important passwords or PINs in documents held by different trusted parties, ensuring access passes on without exposing secrets prematurely.</li>
+          <li><strong>Secure backup</strong> — Split any sensitive text — API keys, recovery codes, encryption passphrases — and store the shares in different places: a safe, a cloud drive, a trusted friend.</li>
+        </ul>
+      </section>
+
+      <section id="offline-mode" class="footer-description">
+        <h3>Offline mode</h3>
+        <ul class="use-cases">
+          <li><strong>Using the hosted version is fine for most secrets.</strong> Nothing is sent to any server — everything runs in your browser. And many secrets (like a PIN or password) are just one layer of security and useless without the thing they protect.</li>
+          <li><strong>Camera scanning requires a web server.</strong> When running offline, QR scanning via camera is unavailable due to browser restrictions. File upload and copy/paste work fine.</li>
+        </ul>
+      </section>
+
+      <div class="privacy-badge">
+        <div class="accent-bar"></div>
+        <p><strong>No tracking. No analytics. No data collection.</strong></p>
+        <p>Your secrets never leave your browser. This app has no server-side component, no cookies, and no third-party scripts.</p>
+      </div>
+
+      <div class="footer-bottom">
+        <p class="copyright">&copy; 2026 <a href="https://secretshards.com">SecretShards.com</a> by <a href="https://ellin.co">Ellin Pino</a></p>
+        <p class="attribution">QR code generation and scanning by <a href="https://github.com/paulmillr/qr">paulmillr-qr</a> (MIT license)</p>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Camera modal -->
+  <div id="camera-modal" class="modal" role="dialog" aria-modal="true" aria-label="Scan QR Code" hidden>
+    <div class="modal-content">
+      <div class="modal-header">
+        <span>Scan QR Code</span>
+        <button id="btn-close-camera" class="btn-close" aria-label="Close">&times;</button>
+      </div>
+      <video id="camera-video" autoplay playsinline></video>
+      <div id="camera-error" class="camera-error" hidden></div>
+    </div>
+  </div>
+
+  <script src="js/sss.js"></script>
+  <script src="js/qr-bundle.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/scanner.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/bundler.js"></script>
+</body>
+</html>
