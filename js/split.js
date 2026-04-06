@@ -176,11 +176,7 @@
       // Print-only description (visible only in @media print)
       const printInfo = document.createElement('div');
       printInfo.className = 'share-print-info';
-      if (parsed && parsed.version >= 2 && parsed.name) {
-        printInfo.textContent = '"' + parsed.name + '" — created with SecretShards.com';
-      } else {
-        printInfo.textContent = 'Created with SecretShards.com';
-      }
+      printInfo.textContent = 'This is one share of a secret split using SecretShards.com.\nTo reconstruct the secret, collect enough shares and combine them there.';
       card.appendChild(printInfo);
 
       const btnPdf = document.createElement('button');
@@ -210,6 +206,11 @@
   // ---------------------------------------------------------------------------
   // Print
   // ---------------------------------------------------------------------------
+  function printPrefix() {
+    const name = SSS.sanitizeName(inputName.value.trim());
+    return name ? 'secretshards-' + name + '-' : 'secretshards-';
+  }
+
   function printSingleShare(index) {
     const cards = sharesList.querySelectorAll('.share-card');
     cards.forEach(function (c, i) {
@@ -218,7 +219,7 @@
     });
 
     const originalTitle = document.title;
-    document.title = SSS.timestampedName('sss-share-' + (index + 1) + 'of' + cards.length + '-');
+    document.title = SSS.timestampedName(printPrefix() + 'share' + (index + 1) + '-');
     window.print();
     document.title = originalTitle;
 
@@ -230,7 +231,7 @@
 
   btnPrint.addEventListener('click', function () {
     const originalTitle = document.title;
-    document.title = SSS.timestampedName('sss-');
+    document.title = SSS.timestampedName(printPrefix());
     window.print();
     document.title = originalTitle;
   });

@@ -961,6 +961,7 @@ footer {
 
   .share-print-info {
     display: block;
+    white-space: pre-line;
     font-size: 13pt;
     font-size: 2cqi;
     font-weight: 400;
