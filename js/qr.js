@@ -18,10 +18,13 @@
     var displaySize = options.size || 256;
     var border = options.border !== undefined ? options.border : 4;
     // encodeQR with 'raw' returns a 2D boolean array (includes border)
-    var raw = encodeQR(data, 'raw', { ecc: 'medium', border: border });
+    // Use low ECC for large data — fewer modules = more scannable from print
+    var ecc = data.length > 500 ? 'low' : 'medium';
+    var raw = encodeQR(data, 'raw', { ecc: ecc, border: border });
     var moduleCount = raw.length;
-    // Use integer cell size for crisp pixels (minimum 8px per module for print quality)
-    var cellSize = Math.max(8, Math.ceil(displaySize / moduleCount));
+    // Use integer cell size for crisp pixels
+    // Minimum 12px per module for print quality on dense QR codes
+    var cellSize = Math.max(12, Math.ceil(displaySize / moduleCount));
     var actualSize = moduleCount * cellSize;
     canvas.width = actualSize;
     canvas.height = actualSize;
