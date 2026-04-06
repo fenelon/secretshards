@@ -963,7 +963,7 @@ footer {
     display: block;
     white-space: pre-line;
     font-size: 13pt;
-    font-size: 2cqi;
+    font-size: 2.3cqi;
     font-weight: 400;
     color: #888;
     text-align: center;
@@ -1004,7 +1004,7 @@ footer {
     cursor: default;
     line-height: 1.4;
     opacity: 1;
-    max-width: 80%;
+    max-width: 95%;
     margin: 0 auto;
   }
 
