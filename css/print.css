@@ -77,8 +77,7 @@ body {
   margin: 0 auto;
 }
 
-.share-card-print,
-.share-card-download,
+.share-card-actions,
 .copied-tooltip,
 .qr-size-warning {
   display: none !important;

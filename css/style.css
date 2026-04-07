@@ -464,6 +464,11 @@ button {
   margin-bottom: 0;
 }
 
+.output-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ============================================================
    Share Cards
    ============================================================ */
@@ -477,10 +482,12 @@ button {
   margin-bottom: 16px;
 }
 
-.share-card-print {
+.share-card-actions {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 8px;
 }
 
 .share-label {
@@ -908,6 +915,18 @@ footer {
   .download-banner-inner {
     font-size: 12px;
     text-align: left;
+  }
+
+  .output-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .share-card-actions {
+    position: static;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 }
 

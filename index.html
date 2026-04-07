@@ -101,8 +101,10 @@
       <div id="split-output" class="output" hidden>
         <div class="output-header">
           <h2>Shares</h2>
-          <button id="btn-print" class="btn-secondary">Print All</button>
-          <button id="btn-download-all" class="btn-secondary">Download All</button>
+          <div class="output-header-actions">
+            <button id="btn-print" class="btn-secondary">Print All</button>
+            <button id="btn-download-all" class="btn-secondary">Download All</button>
+          </div>
         </div>
         <div id="shares-list"></div>
       </div>
@@ -175,8 +177,10 @@
 To reconstruct the secret, collect enough shares and combine them there.</div>
       <div class="share-qr"></div>
       <div class="share-text" role="button" tabindex="0" title="Click to copy"></div>
-      <button class="btn-small share-card-print"></button>
-      <button class="btn-small share-card-download"></button>
+      <div class="share-card-actions">
+        <button class="btn-small share-card-print"></button>
+        <button class="btn-small share-card-download"></button>
+      </div>
     </div>
   </template>
 
