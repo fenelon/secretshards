@@ -407,18 +407,18 @@ button {
 .btn-small {
   display: inline-block;
   background-color: transparent;
-  color: var(--color-secondary);
+  color: #999999;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 6px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-dim);
 }
 
 .btn-small:hover:not(:disabled) {
   color: #cccccc;
-  border-color: var(--color-secondary);
+  border-color: #999999;
 }
 
 .btn-close {
