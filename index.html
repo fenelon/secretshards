@@ -27,6 +27,7 @@
   <script defer src="js/qr.js"></script>
   <script defer src="js/scanner.js"></script>
   <script defer src="js/ui.js"></script>
+  <script defer src="js/download.js"></script>
   <script defer src="js/split.js"></script>
   <script defer src="js/combine.js"></script>
   <script defer src="js/app.js"></script>
@@ -101,6 +102,7 @@
         <div class="output-header">
           <h2>Shares</h2>
           <button id="btn-print" class="btn-secondary">Print All</button>
+          <button id="btn-download-all" class="btn-secondary">Download All</button>
         </div>
         <div id="shares-list"></div>
       </div>
@@ -174,6 +176,7 @@ To reconstruct the secret, collect enough shares and combine them there.</div>
       <div class="share-qr"></div>
       <div class="share-text" role="button" tabindex="0" title="Click to copy"></div>
       <button class="btn-small share-card-print"></button>
+      <button class="btn-small share-card-download"></button>
     </div>
   </template>
 

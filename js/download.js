@@ -9,9 +9,9 @@
 
   var Download = SSS.Download = {};
 
-  // Canvas dimensions — US Letter proportions at 2x for crisp output
-  var W = 1632;
-  var H = 2112;
+  // Canvas dimensions — A4 proportions at 2x for crisp output (210x297mm)
+  var W = 1588;
+  var H = 2245;
 
   /**
    * Render a share card DOM element onto an offscreen canvas.

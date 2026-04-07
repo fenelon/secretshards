@@ -21,6 +21,7 @@
   const btnSplit       = document.getElementById('btn-split');
   const btnClear       = document.getElementById('btn-clear');
   const btnPrint       = document.getElementById('btn-print');
+  const btnDownloadAll = document.getElementById('btn-download-all');
   const splitOutput    = document.getElementById('split-output');
   const sharesList     = document.getElementById('shares-list');
   const splitError     = document.getElementById('split-error');
@@ -172,6 +173,16 @@
         return function () { printSingleShare(shareIdx); };
       })(idx));
 
+      var btnDownload = card.querySelector('.share-card-download');
+      btnDownload.textContent = 'Download ' + (idx + 1);
+      btnDownload.addEventListener('click', (function (shareIdx) {
+        return function () {
+          var c = sharesList.querySelectorAll('.share-card')[shareIdx];
+          var filename = SSS.timestampedName(printPrefix() + 'share' + (shareIdx + 1) + '-') + '.png';
+          SSS.Download.downloadCard(c, filename);
+        };
+      })(idx));
+
       sharesList.appendChild(card);
     });
 
@@ -212,6 +223,8 @@
       printOverlay.appendChild(cards[i].cloneNode(true));
     }
     document.body.classList.add('print-mode');
+    // Force reflow so WKWebView sees the class before snapshotting for print
+    void document.body.offsetHeight;
     window.addEventListener('afterprint', function onAfter() {
       window.removeEventListener('afterprint', onAfter);
       document.body.classList.remove('print-mode');
@@ -256,6 +269,12 @@
   btnPrint.addEventListener('click', function () {
     var cards = sharesList.querySelectorAll('.share-card');
     printCards(SSS.timestampedName(printPrefix()), Array.prototype.slice.call(cards));
+  });
+
+  btnDownloadAll.addEventListener('click', function () {
+    var cards = sharesList.querySelectorAll('.share-card');
+    var prefix = SSS.timestampedName(printPrefix());
+    SSS.Download.downloadAll(Array.prototype.slice.call(cards), prefix);
   });
 
   // ---------------------------------------------------------------------------
