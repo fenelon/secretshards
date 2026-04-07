@@ -194,24 +194,15 @@
     return name ? 'SecretShards.com-' + name + '-' : 'SecretShards.com-';
   }
 
-  // Print by opening a new window with just the share cards.
-  // Each print gets a fresh window context, avoiding iOS Safari's
-  // "suppress alerts" dialog that triggers on repeated window.print() calls.
-  // Falls back to an on-page overlay when popups are blocked (e.g. Brave iOS).
+  // On desktop, print via a new window so each print gets a fresh context.
+  // On iOS (Safari, Brave, etc.) window.open / iframe printing is broken —
+  // use an on-page overlay with @media print CSS instead.
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
   var printOverlay = document.createElement('div');
   printOverlay.id = 'print-overlay';
   document.body.appendChild(printOverlay);
-
-  function printViaWindow(title, html) {
-    var w = window.open('', '_blank');
-    if (!w) return false;
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    w.addEventListener('afterprint', function () { w.close(); });
-    w.print();
-    return true;
-  }
 
   function printViaOverlay(title, cards) {
     var prevTitle = document.title;
@@ -230,7 +221,22 @@
     window.print();
   }
 
+  function printViaWindow(title, html) {
+    var w = window.open('', '_blank');
+    if (!w) return false;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.addEventListener('afterprint', function () { w.close(); });
+    w.print();
+    return true;
+  }
+
   function printCards(title, cards) {
+    if (isIOS) {
+      printViaOverlay(title, cards);
+      return;
+    }
     var body = '';
     for (var i = 0; i < cards.length; i++) body += cards[i].outerHTML;
     var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
