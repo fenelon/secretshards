@@ -853,6 +853,19 @@ footer {
   display: none;
 }
 
+/* Print overlay — fallback when window.open is blocked (e.g. Brave iOS) */
+#print-overlay {
+  display: none;
+}
+
+@media print {
+  body.print-mode > *:not(#print-overlay) {
+    display: none !important;
+  }
+  body.print-mode #print-overlay {
+    display: block !important;
+  }
+}
 
 /* ============================================================
    Utility

@@ -197,6 +197,39 @@
   // Print by opening a new window with just the share cards.
   // Each print gets a fresh window context, avoiding iOS Safari's
   // "suppress alerts" dialog that triggers on repeated window.print() calls.
+  // Falls back to an on-page overlay when popups are blocked (e.g. Brave iOS).
+  var printOverlay = document.createElement('div');
+  printOverlay.id = 'print-overlay';
+  document.body.appendChild(printOverlay);
+
+  function printViaWindow(title, html) {
+    var w = window.open('', '_blank');
+    if (!w) return false;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.addEventListener('afterprint', function () { w.close(); });
+    w.print();
+    return true;
+  }
+
+  function printViaOverlay(title, cards) {
+    var prevTitle = document.title;
+    document.title = title;
+    printOverlay.innerHTML = '';
+    for (var i = 0; i < cards.length; i++) {
+      printOverlay.appendChild(cards[i].cloneNode(true));
+    }
+    document.body.classList.add('print-mode');
+    window.addEventListener('afterprint', function onAfter() {
+      window.removeEventListener('afterprint', onAfter);
+      document.body.classList.remove('print-mode');
+      printOverlay.innerHTML = '';
+      document.title = prevTitle;
+    });
+    window.print();
+  }
+
   function printCards(title, cards) {
     var body = '';
     for (var i = 0; i < cards.length; i++) body += cards[i].outerHTML;
@@ -204,13 +237,9 @@
       title.replace(/</g, '&lt;') +
       '</title><link rel="stylesheet" href="css/print.css">' +
       '</head><body>' + body + '</body></html>';
-    var w = window.open('', '_blank');
-    if (!w) return;
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    w.addEventListener('afterprint', function () { w.close(); });
-    w.print();
+    if (!printViaWindow(title, html)) {
+      printViaOverlay(title, cards);
+    }
   }
 
   function printSingleShare(index) {
@@ -227,6 +256,7 @@
   // Warn before closing if shares are visible
   // ---------------------------------------------------------------------------
   window.addEventListener('beforeunload', function (e) {
+    if (document.body.classList.contains('print-mode')) return;
     if (!splitOutput.hasAttribute('hidden')) {
       e.preventDefault();
       e.returnValue = '';
