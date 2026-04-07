@@ -407,16 +407,26 @@ button {
 .btn-small {
   display: inline-block;
   background-color: transparent;
-  color: #999999;
+  color: var(--color-secondary);
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 6px 12px;
-  border: 1px solid var(--color-dim);
+  border: 1px solid var(--color-border);
 }
 
 .btn-small:hover:not(:disabled) {
+  color: #cccccc;
+  border-color: var(--color-secondary);
+}
+
+.share-card-actions .btn-small {
+  color: #999999;
+  border-color: var(--color-dim);
+}
+
+.share-card-actions .btn-small:hover:not(:disabled) {
   color: #cccccc;
   border-color: #999999;
 }
