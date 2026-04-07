@@ -216,46 +216,35 @@
     return name ? 'SecretShards.com-' + name + '-' : 'SecretShards.com-';
   }
 
-  // Print via a temporary iframe so each print gets a fresh document
-  // context.  Avoids iOS Safari's "suppress alerts" prompt on repeated
-  // window.print() calls and the async-cleanup timing issue.
-  var PRINT_CSS =
-    'body{margin:0;font-family:Helvetica Neue,Helvetica,sans-serif;color:#000}' +
-    '.share-card{background:#fff;padding:3% 0 0;margin:0;text-align:center;' +
-      'page-break-after:always;break-after:page;page-break-inside:avoid;break-inside:avoid;' +
-      'container-type:inline-size}' +
-    '.share-card:last-child{page-break-after:avoid;break-after:avoid}' +
-    '.share-name{font-size:16pt;font-size:3cqi;font-weight:700;margin-bottom:2pt}' +
-    '.share-label{font-size:18pt;font-size:3.5cqi;font-weight:700;text-transform:uppercase;' +
-      'letter-spacing:.12em;color:#555;margin-bottom:8pt;margin-bottom:1cqi}' +
-    '.share-print-info{display:block;white-space:pre-line;font-size:13pt;font-size:2.3cqi;' +
-      'color:#888;text-align:center;line-height:1.4;margin-top:6pt;margin-top:.8cqi}' +
-    '.share-qr{margin-bottom:8pt;margin-bottom:1cqi}' +
-    '.share-qr img{display:block;width:80%;height:auto;margin:0 auto;image-rendering:pixelated}' +
-    '.share-text{font-family:Courier New,Courier,monospace;font-size:12pt;font-size:1.7cqi;' +
-      'color:#333;word-break:break-all;text-align:center;line-height:1.4;max-width:88%;margin:0 auto}' +
-    '.share-card-print,.copied-tooltip,.qr-size-warning{display:none!important}';
+  // Print by cloning cards into a hidden overlay, adding body.print-mode
+  // so @media print CSS hides everything else, then calling window.print().
+  var printOverlay = document.getElementById('print-overlay');
+  if (!printOverlay) {
+    printOverlay = document.createElement('div');
+    printOverlay.id = 'print-overlay';
+    document.body.appendChild(printOverlay);
+  }
+
+  var isPrinting = false;
 
   function printCards(title, cards) {
-    var body = '';
-    for (var i = 0; i < cards.length; i++) body += cards[i].outerHTML;
-    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
-      title.replace(/</g, '&lt;') + '</title><style>' + PRINT_CSS +
-      '</style></head><body>' + body + '</body></html>';
-    var iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;left:-9999px;width:0;height:0;border:none';
-    document.body.appendChild(iframe);
-    var doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(html);
-    doc.close();
     var prevTitle = document.title;
     document.title = title;
-    iframe.contentWindow.addEventListener('afterprint', function () {
+    printOverlay.innerHTML = '';
+    for (var i = 0; i < cards.length; i++) {
+      printOverlay.appendChild(cards[i].cloneNode(true));
+    }
+    document.body.classList.add('print-mode');
+    isPrinting = true;
+
+    window.addEventListener('afterprint', function onAfter() {
+      window.removeEventListener('afterprint', onAfter);
+      isPrinting = false;
+      document.body.classList.remove('print-mode');
+      printOverlay.innerHTML = '';
       document.title = prevTitle;
-      document.body.removeChild(iframe);
     });
-    iframe.contentWindow.print();
+    window.print();
   }
 
   function printSingleShare(index) {
@@ -272,6 +261,7 @@
   // Warn before closing if shares are visible
   // ---------------------------------------------------------------------------
   window.addEventListener('beforeunload', function (e) {
+    if (isPrinting) return;
     if (!splitOutput.hasAttribute('hidden')) {
       e.preventDefault();
       e.returnValue = '';
