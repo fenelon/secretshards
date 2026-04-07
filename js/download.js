@@ -146,4 +146,29 @@
     return lines;
   }
 
+  /**
+   * Trigger a browser download of a Blob with the given filename.
+   */
+  Download.downloadBlob = function (blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  /**
+   * Render a single share card and download it as a PNG.
+   */
+  Download.downloadCard = function (card, filename) {
+    Download.renderCard(card, function (canvas) {
+      canvas.toBlob(function (blob) {
+        Download.downloadBlob(blob, filename);
+      }, 'image/png');
+    });
+  };
+
 })();
