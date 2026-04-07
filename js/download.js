@@ -269,6 +269,38 @@
   };
 
   /**
+   * Render all share cards to PNGs, pack into a ZIP, and download.
+   * cards: NodeList or array of .share-card elements.
+   * filenamePrefix: string prefix for the ZIP filename.
+   */
+  Download.downloadAll = function (cards, filenamePrefix) {
+    var remaining = cards.length;
+    var zipFiles = new Array(cards.length);
+
+    for (var i = 0; i < cards.length; i++) {
+      (function (idx) {
+        Download.renderCard(cards[idx], function (canvas) {
+          canvas.toBlob(function (blob) {
+            var reader = new FileReader();
+            reader.onload = function () {
+              zipFiles[idx] = {
+                name: 'share-' + (idx + 1) + '.png',
+                data: new Uint8Array(reader.result)
+              };
+              remaining--;
+              if (remaining === 0) {
+                var zipBlob = Download.createZip(zipFiles);
+                Download.downloadBlob(zipBlob, filenamePrefix + '.zip');
+              }
+            };
+            reader.readAsArrayBuffer(blob);
+          }, 'image/png');
+        });
+      })(i);
+    }
+  };
+
+  /**
    * CRC-32 (ISO 3309). Table-driven for speed.
    */
   var crcTable = null;
