@@ -937,5 +937,17 @@ footer {
   .share-card-header {
     flex-wrap: wrap;
   }
+
+  .output-header-actions .btn-secondary {
+    font-size: 11px;
+    padding: 10px 12px;
+    letter-spacing: 0.06em;
+  }
+
+  .share-card-actions .btn-small {
+    font-size: 10px;
+    padding: 5px 8px;
+    letter-spacing: 0.04em;
+  }
 }
 
