@@ -78,6 +78,7 @@ body {
 }
 
 .share-card-print,
+.share-card-download,
 .copied-tooltip,
 .qr-size-warning {
   display: none !important;
