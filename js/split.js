@@ -232,9 +232,13 @@
   function printCards(title, cards) {
     var body = '';
     for (var i = 0; i < cards.length; i++) body += cards[i].outerHTML;
+    var printStyle = document.querySelector('style[media="print"]');
+    var cssTag = printStyle
+      ? '<style>' + printStyle.textContent + '</style>'
+      : '<link rel="stylesheet" href="css/print.css">';
     var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
       title.replace(/</g, '&lt;') +
-      '</title><link rel="stylesheet" href="css/print.css">' +
+      '</title>' + cssTag +
       '</head><body>' + body + '</body></html>';
     var w = window.open('', '_blank');
     if (w) {
