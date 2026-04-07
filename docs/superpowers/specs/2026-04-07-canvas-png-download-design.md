@@ -5,7 +5,7 @@
 
 ## Problem
 
-The app currently relies on the browser print dialog for exporting share cards as PDFs. This works but introduces friction: users must navigate the print dialog, choose "Save as PDF," and configure settings. On iOS Safari, this is especially unreliable. We want a one-click download option that bypasses the print dialog entirely.
+The app currently relies on the browser print dialog for exporting share cards as PDFs. This works but introduces friction: users must navigate the print dialog, choose "Save as PDF," and configure settings. On iOS Safari, this is especially unreliable. We want to add a one-click download option that bypasses the print dialog entirely.
 
 ## Decision
 
@@ -90,13 +90,17 @@ Reuses existing `SSS.timestampedName()` and `printPrefix()`:
 
 ### Code Location
 
-All new code goes in `js/split.js` alongside the existing print logic:
+New file `js/download.js` — a self-contained module exposing `SSS.Download`:
 
-- `renderShareCard(card, callback)` — canvas rendering
-- `downloadBlob(blob, filename)` — trigger download
-- `createZip(files)` — minimal ZIP writer
-- Button creation in the existing `shares.forEach()` loop
-- "Download All" button wiring alongside existing `btnPrint` listener
+- `SSS.Download.renderCard(card, callback)` — canvas rendering
+- `SSS.Download.downloadBlob(blob, filename)` — trigger download
+- `SSS.Download.createZip(files)` — minimal ZIP writer
+- `SSS.Download.downloadCard(card, filename)` — render + download single card
+- `SSS.Download.downloadAll(cards, filenamePrefix)` — render all + ZIP + download
+
+`js/split.js` changes are minimal: button creation in the `shares.forEach()` loop and "Download All" button wiring, calling into `SSS.Download`.
+
+`index.html` gets a `<script src="js/download.js">` tag alongside the other scripts.
 
 ### Error Handling
 

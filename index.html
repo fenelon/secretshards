@@ -163,6 +163,52 @@
     </footer>
   </main>
 
+  <!-- Templates (cloned by JS — never rendered directly) -->
+  <template id="tpl-share-card">
+    <div class="share-card">
+      <div class="share-name" hidden></div>
+      <div class="share-label"></div>
+      <div class="share-print-info">This is one share of a secret split using SecretShards.com.
+To reconstruct the secret, collect enough shares and combine them there.</div>
+      <div class="share-qr"></div>
+      <div class="share-text" role="button" tabindex="0" title="Click to copy"></div>
+      <button class="btn-small share-card-print"></button>
+    </div>
+  </template>
+
+  <template id="tpl-combine-filled">
+    <div class="combine-card combine-card-filled">
+      <div class="combine-card-label"></div>
+      <div class="combine-card-preview"></div>
+      <button class="combine-card-remove" aria-label="Remove share">&times;</button>
+    </div>
+  </template>
+
+  <template id="tpl-combine-add">
+    <div class="combine-card combine-card-add">
+      <div class="combine-card-label">Add Share</div>
+    </div>
+  </template>
+
+  <template id="tpl-combine-actions">
+    <div class="combine-card-actions">
+      <button class="btn-secondary combine-btn-scan">Scan QR</button>
+      <button class="btn-secondary combine-btn-upload">Upload QR Image</button>
+      <input type="file" accept="image/*" style="display:none" class="combine-file-input">
+      <button class="btn-secondary combine-btn-paste">Paste Text</button>
+    </div>
+  </template>
+
+  <template id="tpl-combine-paste">
+    <input type="text" class="combine-card-input" placeholder="Paste share here&#x2026;" autocomplete="off" spellcheck="false">
+    <div class="combine-card-error" hidden></div>
+    <button class="btn-small combine-card-paste-back">Back</button>
+  </template>
+
+  <template id="tpl-combine-error">
+    <div class="combine-card-error"></div>
+  </template>
+
   <!-- Camera modal -->
   <div id="camera-modal" class="modal" role="dialog" aria-modal="true" aria-label="Scan QR Code" hidden>
     <div class="modal-content">

@@ -30,35 +30,24 @@
   // ---------------------------------------------------------------------------
   // Filled share cards
   // ---------------------------------------------------------------------------
+  var tplFilled  = document.getElementById('tpl-combine-filled');
+  var tplAdd     = document.getElementById('tpl-combine-add');
+  var tplActions = document.getElementById('tpl-combine-actions');
+  var tplPaste   = document.getElementById('tpl-combine-paste');
+
   function createFilledCard(shareData) {
-    const card = document.createElement('div');
-    card.className = 'combine-card combine-card-filled';
+    const card = tplFilled.content.cloneNode(true).querySelector('.combine-card');
     card.dataset.share = shareData;
 
-    const label = document.createElement('div');
-    label.className = 'combine-card-label';
     const parsed = SSS.parseShare(shareData);
-    if (parsed && parsed.version >= 2 && parsed.name) {
-      label.textContent = parsed.name;
-    } else {
-      label.textContent = 'Share';
-    }
-    card.appendChild(label);
+    card.querySelector('.combine-card-label').textContent =
+      (parsed && parsed.version >= 2 && parsed.name) ? parsed.name : 'Share';
 
-    const preview = document.createElement('div');
-    preview.className = 'combine-card-preview';
-    card.appendChild(preview);
-
-    const btnRemove = document.createElement('button');
-    btnRemove.className = 'combine-card-remove';
-    btnRemove.textContent = '\u00d7';
-    btnRemove.setAttribute('aria-label', 'Remove share');
-    btnRemove.addEventListener('click', function () {
+    card.querySelector('.combine-card-remove').addEventListener('click', function () {
       shareInputs.removeChild(card);
       renumberCards();
       validateCombine();
     });
-    card.appendChild(btnRemove);
 
     const addCard = shareInputs.querySelector('.combine-card-add');
     shareInputs.insertBefore(card, addCard);
@@ -77,31 +66,19 @@
       addCard.removeChild(addCard.lastChild);
     }
 
-    const actions = document.createElement('div');
-    actions.className = 'combine-card-actions';
+    const actions = tplActions.content.cloneNode(true).querySelector('.combine-card-actions');
 
-    // Scan QR button
-    if (SSS.Scanner.hasCamera) {
-      const btnScan = document.createElement('button');
-      btnScan.className = 'btn-secondary';
-      btnScan.textContent = 'Scan QR';
-      btnScan.addEventListener('click', function () {
+    if (!SSS.Scanner.hasCamera) {
+      var scanBtn = actions.querySelector('.combine-btn-scan');
+      scanBtn.parentNode.removeChild(scanBtn);
+    } else {
+      actions.querySelector('.combine-btn-scan').addEventListener('click', function () {
         activeCameraSlot = { callback: createFilledCard };
         openCamera();
       });
-      actions.appendChild(btnScan);
     }
 
-    // Upload QR Code Image button
-    const btnUpload = document.createElement('button');
-    btnUpload.className = 'btn-secondary';
-    btnUpload.textContent = 'Upload QR Image';
-
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.style.display = 'none';
-
+    var fileInput = actions.querySelector('.combine-file-input');
     fileInput.addEventListener('change', function () {
       const file = fileInput.files[0];
       if (!file) return;
@@ -128,21 +105,13 @@
       fileInput.value = '';
     });
 
-    btnUpload.addEventListener('click', function () {
+    actions.querySelector('.combine-btn-upload').addEventListener('click', function () {
       fileInput.click();
     });
 
-    actions.appendChild(btnUpload);
-    actions.appendChild(fileInput);
-
-    // Paste Text button
-    const btnPaste = document.createElement('button');
-    btnPaste.className = 'btn-secondary';
-    btnPaste.textContent = 'Paste Text';
-    btnPaste.addEventListener('click', function () {
+    actions.querySelector('.combine-btn-paste').addEventListener('click', function () {
       showPasteMode('');
     });
-    actions.appendChild(btnPaste);
 
     addCard.appendChild(actions);
   }
@@ -158,17 +127,11 @@
       addCard.removeChild(addCard.lastChild);
     }
 
-    const textInput = document.createElement('input');
-    textInput.type = 'text';
-    textInput.className = 'combine-card-input';
-    textInput.placeholder = 'Paste share here\u2026';
-    textInput.setAttribute('autocomplete', 'off');
-    textInput.setAttribute('spellcheck', 'false');
-    if (prefill) textInput.value = prefill;
+    const frag = tplPaste.content.cloneNode(true);
+    const textInput = frag.querySelector('.combine-card-input');
+    const errorMsg = frag.querySelector('.combine-card-error');
 
-    const errorMsg = document.createElement('div');
-    errorMsg.className = 'combine-card-error';
-    errorMsg.setAttribute('hidden', '');
+    if (prefill) textInput.value = prefill;
 
     function trySubmit() {
       const val = textInput.value.trim();
@@ -192,17 +155,11 @@
 
     textInput.addEventListener('input', trySubmit);
 
-    addCard.appendChild(textInput);
-    addCard.appendChild(errorMsg);
-
-    const btnBack = document.createElement('button');
-    btnBack.className = 'btn-small combine-card-paste-back';
-    btnBack.textContent = 'Back';
-    btnBack.addEventListener('click', function () {
+    frag.querySelector('.combine-card-paste-back').addEventListener('click', function () {
       resetAddCard();
     });
-    addCard.appendChild(btnBack);
 
+    addCard.appendChild(frag);
     textInput.focus();
 
     if (prefill) {
@@ -214,14 +171,7 @@
   // Card helpers
   // ---------------------------------------------------------------------------
   function createAddShareCard() {
-    const card = document.createElement('div');
-    card.className = 'combine-card combine-card-add';
-
-    const label = document.createElement('div');
-    label.className = 'combine-card-label';
-    label.textContent = 'Add Share';
-    card.appendChild(label);
-
+    const card = tplAdd.content.cloneNode(true).querySelector('.combine-card');
     shareInputs.appendChild(card);
     resetAddCard();
   }
@@ -253,12 +203,13 @@
     return null;
   }
 
+  var tplError = document.getElementById('tpl-combine-error');
+
   function highlightDuplicate(card) {
     const existing = card.querySelector('.combine-card-error');
     if (existing) existing.parentNode.removeChild(existing);
 
-    const errorMsg = document.createElement('div');
-    errorMsg.className = 'combine-card-error';
+    const errorMsg = tplError.content.cloneNode(true).querySelector('.combine-card-error');
     errorMsg.textContent = 'Duplicate share';
     card.appendChild(errorMsg);
 

@@ -127,35 +127,24 @@
       sharesList.removeChild(sharesList.firstChild);
     }
 
-    shares.forEach(function (share, idx) {
-      const card = document.createElement('div');
-      card.className = 'share-card';
+    var tplShareCard = document.getElementById('tpl-share-card');
 
-      const label = document.createElement('div');
-      label.className = 'share-label';
-      card.appendChild(label);
+    shares.forEach(function (share, idx) {
+      const card = tplShareCard.content.cloneNode(true).querySelector('.share-card');
 
       const parsed = SSS.parseShare(share);
       if (parsed && parsed.version >= 2 && parsed.name) {
-        const nameSpan = document.createElement('div');
-        nameSpan.className = 'share-name';
-        nameSpan.textContent = parsed.name;
-        card.insertBefore(nameSpan, label);
+        var nameEl = card.querySelector('.share-name');
+        nameEl.textContent = parsed.name;
+        nameEl.removeAttribute('hidden');
       }
-      label.textContent = 'Share ' + (idx + 1) + (parsed && parsed.version >= 2 ? '' : ' of ' + total);
+      card.querySelector('.share-label').textContent =
+        'Share ' + (idx + 1) + (parsed && parsed.version >= 2 ? '' : ' of ' + total);
 
-      // Print-only description (visible only in @media print)
-      const printInfo = document.createElement('div');
-      printInfo.className = 'share-print-info';
-      printInfo.textContent = 'This is one share of a secret split using SecretShards.com.\nTo reconstruct the secret, collect enough shares and combine them there.';
-      card.appendChild(printInfo);
-
-      const qrDiv = document.createElement('div');
-      qrDiv.className = 'share-qr';
+      var qrDiv = card.querySelector('.share-qr');
       const canvas = document.createElement('canvas');
       try {
         SSS.QR.generate(share, canvas, { size: 200 });
-        // Use <img> instead of <canvas> so CSS width works in print
         const img = document.createElement('img');
         img.src = canvas.toDataURL('image/png');
         img.width = 200;
@@ -163,17 +152,11 @@
         img.alt = 'QR code for share ' + (idx + 1);
         qrDiv.appendChild(img);
       } catch (e) {
-        // QR generation failed (share too large) — show canvas as fallback
         qrDiv.appendChild(canvas);
       }
-      card.appendChild(qrDiv);
 
-      const shareText = document.createElement('div');
-      shareText.className = 'share-text';
+      var shareText = card.querySelector('.share-text');
       shareText.textContent = share;
-      shareText.title = 'Click to copy';
-      shareText.setAttribute('role', 'button');
-      shareText.setAttribute('tabindex', '0');
       shareText.addEventListener('click', function () {
         navigator.clipboard.writeText(share).then(function () {
           UI.showTooltip(shareText, 'Copied');
@@ -182,17 +165,12 @@
           UI.showTooltip(shareText, 'Select text to copy');
         });
       });
-      card.appendChild(shareText);
 
-      const btnPdf = document.createElement('button');
-      btnPdf.className = 'btn-small share-card-print';
-      btnPdf.textContent = 'Print Share ' + (idx + 1);
-      btnPdf.addEventListener('click', (function (shareIdx) {
-        return function () {
-          printSingleShare(shareIdx);
-        };
+      var btnPrint = card.querySelector('.share-card-print');
+      btnPrint.textContent = 'Print Share ' + (idx + 1);
+      btnPrint.addEventListener('click', (function (shareIdx) {
+        return function () { printSingleShare(shareIdx); };
       })(idx));
-      card.appendChild(btnPdf);
 
       sharesList.appendChild(card);
     });
@@ -216,35 +194,23 @@
     return name ? 'SecretShards.com-' + name + '-' : 'SecretShards.com-';
   }
 
-  // Print by cloning cards into a hidden overlay, adding body.print-mode
-  // so @media print CSS hides everything else, then calling window.print().
-  var printOverlay = document.getElementById('print-overlay');
-  if (!printOverlay) {
-    printOverlay = document.createElement('div');
-    printOverlay.id = 'print-overlay';
-    document.body.appendChild(printOverlay);
-  }
-
-  var isPrinting = false;
-
+  // Print by opening a new window with just the share cards.
+  // Each print gets a fresh window context, avoiding iOS Safari's
+  // "suppress alerts" dialog that triggers on repeated window.print() calls.
   function printCards(title, cards) {
-    var prevTitle = document.title;
-    document.title = title;
-    printOverlay.innerHTML = '';
-    for (var i = 0; i < cards.length; i++) {
-      printOverlay.appendChild(cards[i].cloneNode(true));
-    }
-    document.body.classList.add('print-mode');
-    isPrinting = true;
-
-    window.addEventListener('afterprint', function onAfter() {
-      window.removeEventListener('afterprint', onAfter);
-      isPrinting = false;
-      document.body.classList.remove('print-mode');
-      printOverlay.innerHTML = '';
-      document.title = prevTitle;
-    });
-    window.print();
+    var body = '';
+    for (var i = 0; i < cards.length; i++) body += cards[i].outerHTML;
+    var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
+      title.replace(/</g, '&lt;') +
+      '</title><link rel="stylesheet" href="css/print.css">' +
+      '</head><body>' + body + '</body></html>';
+    var w = window.open('', '_blank');
+    if (!w) return;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.addEventListener('afterprint', function () { w.close(); });
+    w.print();
   }
 
   function printSingleShare(index) {
@@ -261,7 +227,6 @@
   // Warn before closing if shares are visible
   // ---------------------------------------------------------------------------
   window.addEventListener('beforeunload', function (e) {
-    if (isPrinting) return;
     if (!splitOutput.hasAttribute('hidden')) {
       e.preventDefault();
       e.returnValue = '';

@@ -1,0 +1,84 @@
+body {
+  margin: 0;
+  font-family: Helvetica Neue, Helvetica, sans-serif;
+  color: #000;
+}
+
+.share-card {
+  background: #fff;
+  border: none;
+  padding: 3% 0 0;
+  margin: 0;
+  text-align: center;
+  page-break-after: always;
+  break-after: page;
+  page-break-inside: avoid;
+  break-inside: avoid;
+  container-type: inline-size;
+}
+
+.share-card:last-child {
+  page-break-after: avoid;
+  break-after: avoid;
+}
+
+.share-name {
+  font-size: 16pt;
+  font-size: 3cqi;
+  font-weight: 700;
+  margin-bottom: 2pt;
+}
+
+.share-label {
+  font-size: 18pt;
+  font-size: 3.5cqi;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: #555;
+  margin-bottom: 8pt;
+  margin-bottom: 1cqi;
+}
+
+.share-print-info {
+  display: block;
+  white-space: pre-line;
+  font-size: 13pt;
+  font-size: 2.3cqi;
+  color: #888;
+  text-align: center;
+  line-height: 1.4;
+  margin-top: 6pt;
+  margin-top: .8cqi;
+}
+
+.share-qr {
+  margin-bottom: 8pt;
+  margin-bottom: 1cqi;
+}
+
+.share-qr img {
+  display: block;
+  width: 80%;
+  height: auto;
+  margin: 0 auto;
+  image-rendering: pixelated;
+}
+
+.share-text {
+  font-family: Courier New, Courier, monospace;
+  font-size: 12pt;
+  font-size: 1.7cqi;
+  color: #333;
+  word-break: break-all;
+  text-align: center;
+  line-height: 1.4;
+  max-width: 88%;
+  margin: 0 auto;
+}
+
+.share-card-print,
+.copied-tooltip,
+.qr-size-warning {
+  display: none !important;
+}
