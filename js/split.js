@@ -249,7 +249,10 @@
     doc.open();
     doc.write(html);
     doc.close();
+    var prevTitle = document.title;
+    document.title = title;
     iframe.contentWindow.addEventListener('afterprint', function () {
+      document.title = prevTitle;
       document.body.removeChild(iframe);
     });
     iframe.contentWindow.print();
