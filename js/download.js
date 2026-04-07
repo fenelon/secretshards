@@ -33,7 +33,7 @@
     var nameEl = card.querySelector('.share-name');
     if (nameEl && !nameEl.hasAttribute('hidden')) {
       ctx.fillStyle = '#000';
-      ctx.font = 'bold ' + Math.round(W * 0.03) + 'px Helvetica Neue, Helvetica, sans-serif';
+      ctx.font = 'bold ' + Math.round(W * 0.03) + 'px Arial, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(nameEl.textContent, W / 2, y + Math.round(W * 0.03));
       y += Math.round(W * 0.04);
@@ -43,7 +43,7 @@
     var labelEl = card.querySelector('.share-label');
     if (labelEl) {
       ctx.fillStyle = '#555';
-      ctx.font = 'bold ' + Math.round(W * 0.035) + 'px Helvetica Neue, Helvetica, sans-serif';
+      ctx.font = 'bold ' + Math.round(W * 0.035) + 'px Arial, sans-serif';
       ctx.textAlign = 'center';
       var labelText = labelEl.textContent.toUpperCase();
       ctx.letterSpacing = '0.12em';
@@ -57,7 +57,7 @@
     if (infoEl) {
       ctx.fillStyle = '#888';
       var infoSize = Math.round(W * 0.023);
-      ctx.font = infoSize + 'px Helvetica Neue, Helvetica, sans-serif';
+      ctx.font = infoSize + 'px Arial, sans-serif';
       ctx.textAlign = 'center';
       var infoLines = infoEl.textContent.split('\n');
       for (var i = 0; i < infoLines.length; i++) {
