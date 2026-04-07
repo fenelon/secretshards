@@ -172,15 +172,17 @@
   <template id="tpl-share-card">
     <div class="share-card">
       <div class="share-name" hidden></div>
-      <div class="share-label"></div>
+      <div class="share-card-header">
+        <div class="share-label"></div>
+        <div class="share-card-actions">
+          <button class="btn-small share-card-print"></button>
+          <button class="btn-small share-card-download"></button>
+        </div>
+      </div>
       <div class="share-print-info">This is one share of a secret split using SecretShards.com.
 To reconstruct the secret, collect enough shares and combine them there.</div>
       <div class="share-qr"></div>
       <div class="share-text" role="button" tabindex="0" title="Click to copy"></div>
-      <div class="share-card-actions">
-        <button class="btn-small share-card-print"></button>
-        <button class="btn-small share-card-download"></button>
-      </div>
     </div>
   </template>
 

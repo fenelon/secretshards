@@ -482,12 +482,18 @@ button {
   margin-bottom: 16px;
 }
 
+.share-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
 .share-card-actions {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   display: flex;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .share-label {
@@ -496,7 +502,6 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-secondary);
-  margin-bottom: 16px;
 }
 
 .share-name {
@@ -922,11 +927,8 @@ footer {
     gap: 8px;
   }
 
-  .share-card-actions {
-    position: static;
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
+  .share-card-header {
+    flex-wrap: wrap;
   }
 }
 
