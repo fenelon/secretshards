@@ -168,13 +168,13 @@
       });
 
       var btnPrint = card.querySelector('.share-card-print');
-      btnPrint.textContent = 'Print Share ' + (idx + 1);
+      btnPrint.textContent = 'Print';
       btnPrint.addEventListener('click', (function (shareIdx) {
         return function () { printSingleShare(shareIdx); };
       })(idx));
 
       var btnDownload = card.querySelector('.share-card-download');
-      btnDownload.textContent = 'Download ' + (idx + 1);
+      btnDownload.textContent = 'Download';
       btnDownload.addEventListener('click', (function (shareIdx) {
         return function () {
           var c = sharesList.querySelectorAll('.share-card')[shareIdx];
@@ -205,12 +205,8 @@
     return name ? 'SecretShards.com-' + name + '-' : 'SecretShards.com-';
   }
 
-  // On desktop, print via a new window so each print gets a fresh context.
-  // On iOS (Safari, Brave, etc.) window.open / iframe printing is broken —
-  // use an on-page overlay with @media print CSS instead.
-  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
+  // Print via a new window with just the share cards. Falls back to an
+  // on-page overlay + @media print CSS when popups are blocked (e.g. Brave).
   var printOverlay = document.createElement('div');
   printOverlay.id = 'print-overlay';
   document.body.appendChild(printOverlay);
@@ -223,7 +219,6 @@
       printOverlay.appendChild(cards[i].cloneNode(true));
     }
     document.body.classList.add('print-mode');
-    // Force reflow so WKWebView sees the class before snapshotting for print
     void document.body.offsetHeight;
     window.addEventListener('afterprint', function onAfter() {
       window.removeEventListener('afterprint', onAfter);
@@ -234,29 +229,21 @@
     window.print();
   }
 
-  function printViaWindow(title, html) {
-    var w = window.open('', '_blank');
-    if (!w) return false;
-    w.document.open();
-    w.document.write(html);
-    w.document.close();
-    w.addEventListener('afterprint', function () { w.close(); });
-    w.print();
-    return true;
-  }
-
   function printCards(title, cards) {
-    if (isIOS) {
-      printViaOverlay(title, cards);
-      return;
-    }
     var body = '';
     for (var i = 0; i < cards.length; i++) body += cards[i].outerHTML;
     var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' +
       title.replace(/</g, '&lt;') +
       '</title><link rel="stylesheet" href="css/print.css">' +
       '</head><body>' + body + '</body></html>';
-    if (!printViaWindow(title, html)) {
+    var w = window.open('', '_blank');
+    if (w) {
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.addEventListener('afterprint', function () { w.close(); });
+      w.print();
+    } else {
       printViaOverlay(title, cards);
     }
   }
